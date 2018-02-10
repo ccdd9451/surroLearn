@@ -15,15 +15,16 @@ def RMSE(prediction, reference):
 
     Returns:
 
-        RMSE loss with shape [output_dim].
+        RMSE losses with shape [output_dim].
 
     """
 
     diff = tf.squared_difference(prediction, reference)
     diff = tf.reduce_mean(diff, axis=1)
-    loss = tf.sqrt(diff)
+    ref_loss = tf.sqrt(diff)
+    ref_loss = tf.identity(ref_loss, name="ref_loss")
 
-    return loss
+    return ref_loss
 
 
 def L2(weights, scale):
@@ -43,6 +44,6 @@ def L2(weights, scale):
     weights = map(tf.square, weights)
     weights = map(tf.reduce_sum, weights)
     weights = sum(weights)
-    loss = scale * weights
+    losses = scale * weights
 
-    return loss
+    return losses

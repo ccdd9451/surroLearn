@@ -21,9 +21,12 @@ class Executor(object):
         self.inputs = tf.get_variable("inputs")
         self.reference = tf.get_variable("reference")
 
+        self.global_init = tf.get_operation_by_name("global_init")
         self.epoch_init = tf.get_operation_by_name("epoch_init")
         self.train_op = tf.get_operation_by_name("train_op")
         self.global_step_inc = tf.get_operation_by_name("global_step_inc")
+
+        self.sess.run(self.global_init)
 
     def global_step(self):
         return self.sess.run(self.global_step)
