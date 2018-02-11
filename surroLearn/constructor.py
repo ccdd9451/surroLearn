@@ -2,7 +2,7 @@
 # encoding: utf-8
 
 import tensorflow as tf
-from . import dataset
+from . import data
 from .ops import L2
 
 
@@ -31,18 +31,20 @@ class Constructor(object):
 
         """
         self.graphGen = graphGen
-        self.inputs = inputs
-        self.references = references
         self.batch_size = batch_size
         self.is_training = is_training
         self.learning_rate = learning_rate
         self.formulations = {}
+        self.devider = data.Devider(inputs, references)
 
     def regularize_formulate(self, scale=None, function=None):
         if scale:
-            reg = lambda w: sum( L2 (w, scale) )
+
+            def reg(w):
+                return sum(L2(w, scale))
+
             self.formulations["regularize"] = reg
-        elif  function:
+        elif function:
             self.formulations["regularize"] = function
 
         return self.formulations.get("regularize")
@@ -55,13 +57,13 @@ class Constructor(object):
         return self.formulations["rmse_loss"]
 
     def main_data_pipe(self):
-        pass
+        return data.Dataset.shuffle_batch(*self.devider.train[:0.75])
 
     def cross_vaild_pipe(self):
-        pass
+        return data.Dataset.static_tensor(*self.devider.train[0.75:])
 
     def test_pipe(self):
-        pass
+        return data.Dataset.static_tensor(*self.devider.test.all())
 
     def training_bake(self):
         weights = []
@@ -70,7 +72,6 @@ class Constructor(object):
         def trainable_collect(w, b):
             weights.append(w)
             biases.append(b)
-
 
         # Send all data into tensors
         ti, tr = self.main_data_pipe()
@@ -86,7 +87,7 @@ class Constructor(object):
             tot_loss = ref_loss + weights_loss
 
             optimizer = tf.train.AdamOptimizer(self.learning_rate)
-            optimizer.minimize(tot_loss, name = "train_op")
+            optimizer.minimize(tot_loss, name="train_op")
 
             epoch = tf.Variable(0, trainable=False, name="global_step")
             tf.assign_add(epoch, 1, name="global_step_inc")
