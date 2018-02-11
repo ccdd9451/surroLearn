@@ -8,7 +8,7 @@ from datetime import datetime
 
 
 class Executor(object):
-    def __init__(self, sess, graph, save_list, save_dir):
+    def __init__(self, sess, graph, save_list, save_dir, evaluate_only=False):
 
         self.sess = sess
         self.graph = graph
@@ -21,12 +21,13 @@ class Executor(object):
         self.inputs = tf.get_variable("inputs")
         self.reference = tf.get_variable("reference")
 
-        self.global_init = tf.get_operation_by_name("global_init")
-        self.epoch_init = tf.get_operation_by_name("epoch_init")
-        self.train_op = tf.get_operation_by_name("train_op")
-        self.global_step_inc = tf.get_operation_by_name("global_step_inc")
+        if not evaluate_only:
+            self.global_init = tf.get_operation_by_name("global_init")
+            self.epoch_init = tf.get_operation_by_name("epoch_init")
+            self.train_op = tf.get_operation_by_name("train_op")
+            self.global_step_inc = tf.get_operation_by_name("global_step_inc")
 
-        self.sess.run(self.global_init)
+            self.sess.run(self.global_init)
 
     def global_step(self):
         return self.sess.run(self.global_step)
@@ -50,7 +51,7 @@ class Executor(object):
         }
 
         rmse = self.sess.run(self.ref_rmse, feed_dict=sample)
-        print(datetime.now(), "Evation on ", msg, ": ", rmse)
+        print(datetime.now(), "Evaluating on ", msg, ": ", rmse)
 
         return rmse
 
