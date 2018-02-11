@@ -21,10 +21,10 @@ def RMSE(prediction, reference):
 
     diff = tf.squared_difference(prediction, reference)
     diff = tf.reduce_mean(diff, axis=1)
-    ref_loss = tf.sqrt(diff)
-    ref_loss = tf.identity(ref_loss, name="ref_loss")
+    ref_rmse = tf.sqrt(diff)
+    ref_rmse = tf.identity(ref_rmse, name="ref_rmse")
 
-    return ref_loss
+    return ref_rmse
 
 
 def L2(weights, scale):

@@ -17,7 +17,7 @@ class Executor(object):
 
         self.saver = tf.train.Saver(save_list)
         self.global_step = tf.get_variable("global_step")
-        self.ref_loss = tf.get_variable("ref_loss")
+        self.ref_rmse = tf.get_variable("ref_rmse")
         self.inputs = tf.get_variable("inputs")
         self.reference = tf.get_variable("reference")
 
@@ -49,10 +49,10 @@ class Executor(object):
             self.reference: reference,
         }
 
-        losses = self.sess.run(self.ref_loss, feed_dict=sample)
-        print(datetime.now(), "Evation on ", msg, ": ", losses)
+        rmse = self.sess.run(self.ref_rmse, feed_dict=sample)
+        print(datetime.now(), "Evation on ", msg, ": ", rmse)
 
-        return losses
+        return rmse
 
     def predict(self, inputs):
         sample = {self.inputs: inputs}
