@@ -9,11 +9,6 @@ class Dataset(object):
     @staticmethod
     def stochastic(inputs, reference):
 
-        inputs = inputs.astype(np.float32)
-        reference = reference.astype(np.float32)
-        if reference.ndim == 1:
-            reference = reference[:, None]
-
         dat = tf.data.Dataset.from_tensor_slices(tuple(
             inputs, reference)).make_initializable_iterator()
         tf.group(dat.initializer, name="epoch_init")
@@ -26,11 +21,6 @@ class Dataset(object):
 
     @staticmethod
     def shuffle_batch(inputs, reference, batch_size):
-
-        inputs = inputs.astype(np.float32)
-        reference = reference.astype(np.float32)
-        if reference.ndim == 1:
-            reference = reference[:, None]
 
         dat = tf.data.Dataset.from_tensor_slices(tuple(
             inputs, reference)).shuffle().batch(
@@ -46,13 +36,51 @@ class Dataset(object):
     @staticmethod
     def static_tensor(inputs, reference, batch_size):
 
-        inputs = inputs.astype(np.float32)
-        reference = reference.astype(np.float32)
-        if reference.ndim == 1:
-            reference = reference[:, None]
-
         with tf.variable_scope("extra_tensor"):
             inp_t = tf.convert_to_tensor(inputs, name="inputs")
             ref_t = tf.convert_to_tensor(reference, name="reference")
 
         return inp_t, ref_t
+
+
+class Devider(object):
+    class Barrel(object):
+        def __init__(self, inp, ref):
+            self.inp = inp
+            self.ref = ref
+            self.size = inp.shape[0]
+
+        def __getitem__(self, sl):
+            start = int(sl.start * self.size)
+            stop = int(sl.stop * self.size)
+
+            return (self.inp[start:stop, :], self.ref[start:stop, :])
+
+        def all(self):
+            return (self.inp, self.ref)
+
+        def lim_amount(self, start, stop, size):
+            start = int(start * self.size)
+            stop = int(stop * self.size)
+
+            return (self.inp[start:stop, :][:size, :],
+                    self.ref[start:stop, :][:size, :])
+
+    def __init__(self, inputs, reference, shuffle_range=0.85, seed=None):
+
+        self.inputs = inputs.astype(np.float32)
+        self.reference = reference.astype(np.float32)
+        if reference.ndim == 1:
+            reference = reference[:, None]
+
+        data_size = self.inputs.shape[0]
+        self.test_cut = int(data_size * shuffle_range)
+
+        if seed:
+            np.random.seed(seed)
+        self.shuffled_data = np.random.shuffle(np.arange(self.test_cut))
+
+        self.train = Devider.Barrel(self.inputs[self.shuffled_data, :],
+                                    self.reference[self.shuffled_data, :])
+        self.test = Devider.Barrel(self.inputs[self.test_cut:, :],
+                                   self.reference[self.test_cut:, :])
