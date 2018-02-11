@@ -78,7 +78,9 @@ class Devider(object):
 
         if seed:
             np.random.seed(seed)
-        self.shuffled_data = np.random.shuffle(np.arange(self.test_cut))
+
+        self.shuffled_indicies = np.arange(self.test_cut)
+        np.random.shuffle(self.shuffled_indicies)
 
         self.train = Devider.Barrel(self.inputs[self.shuffled_data, :],
                                     self.reference[self.shuffled_data, :])
