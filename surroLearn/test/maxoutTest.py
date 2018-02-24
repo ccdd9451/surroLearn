@@ -24,7 +24,7 @@ class GraphTest(tf.test.TestCase):
                 num_cells=100,
                 num_units=10,
                 num_outputs=4,
-                level=6,
+                num_level=6,
                 trainable_collect=collect_trainables)
 
             self.assertTrue(len(weights_var) == 7, str(len(weights_var)))
