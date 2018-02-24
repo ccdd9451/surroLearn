@@ -3,6 +3,12 @@
 
 import numpy as np
 import tensorflow as tf
+"""
+
+    All dataset must be composed as two matrices (X, Y) whose shape
+    is [batch_size, features]
+
+"""
 
 
 class Dataset(object):
@@ -44,6 +50,14 @@ class Dataset(object):
 
 
 class Devider(object):
+    """
+
+        Devide dataset into train/test dataset first. After that, one
+        can choose to get all data from the dataset, or just picking
+        up part of the data
+
+    """
+
     class Barrel(object):
         def __init__(self, inp, ref):
             self.inp = inp
@@ -86,3 +100,9 @@ class Devider(object):
                                     self.reference[self.shuffled_data, :])
         self.test = Devider.Barrel(self.inputs[self.test_cut:, :],
                                    self.reference[self.test_cut:, :])
+
+def load(filename):
+    from pickle import load
+
+    with open(filename, "rb") as f:
+        return load(f)

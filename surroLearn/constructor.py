@@ -38,8 +38,19 @@ class Constructor(object):
         self.devider = data.Devider(inputs, references)
 
     def regularize_formulate(self, scale=None, function=None):
-        if scale:
+        """
+        Args:
 
+        scale:
+            A Tensor or float value, lambda value used when directly performing
+            L2 regularization to the graph.
+
+        function:
+            A function takes all weights as input, and return the loss as output.
+
+        """
+
+        if scale:
             def reg(w):
                 return sum(L2(w, scale))
 
@@ -50,6 +61,14 @@ class Constructor(object):
         return self.formulations.get("regularize")
 
     def rmse_loss_formulate(self, function=None):
+        """
+        Args:
+
+        function:
+            A function takes all weights as input, and return the loss as output.
+
+        """
+
         if function:
             self.formulations["rmse_loss"] = function
         elif not self.formulations.get("rmse_loss"):
