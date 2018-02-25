@@ -7,14 +7,26 @@ from .ops import L2
 
 
 class Constructor(object):
+    """
+
+    Tensorflow graph constructor. The default behavior as following:
+
+    c = Constructor(graphGen, inputs, references, random_seed)
+
+    ``optional
+    c.regularize_formulate(function=f)
+    c.rmse_loss_formulate(function=f)
+    ``
+
+    graph = c.training_bake()
+
+    """
+
     def __init__(self,
                  graphGen,
                  inputs,
                  references,
-                 batch_size,
-                 is_training,
-                 dataset_split=None,
-                 learning_rate=None,
+                 learning_rate=0.001,
                  random_seed=None):
         """
 
@@ -35,16 +47,12 @@ class Constructor(object):
         references:
             Coresponding supervised learning references
 
-
-
-
         """
+
         self.graphGen = graphGen
-        self.batch_size = batch_size
-        self.is_training = is_training
-        self.learning_rate = learning_rate
         self.formulations = {}
-        self.devider = data.Devider(inputs, references)
+        self.learning_rate = learning_rate
+        self.devider = data.Devider(inputs, references, seed=random_seed)
 
     def regularize_formulate(self, scale=None, function=None):
         """
@@ -55,34 +63,36 @@ class Constructor(object):
             L2 regularization to the graph.
 
         function:
-            A function takes all weights as input, and return the loss as output.
+            A function f(weights, trainable_collect) takes all weights as input,
+            and return the loss as output.
 
         """
 
         if scale:
 
-            def reg(w):
+            def reg(w, _):
                 return sum(L2(w, scale))
 
             self.formulations["regularize"] = reg
         elif function:
             self.formulations["regularize"] = function
 
-        return self.formulations.get("regularize")
+        return self.formulations.get("regularize", 0)
 
     def rmse_loss_formulate(self, function=None):
         """
         Args:
 
         function:
-            A function takes all weights as input, and return the loss as output.
+            A function f(weights, trainable_collect) takes all weights as input,
+            and return the loss as output.
 
         """
 
         if function:
             self.formulations["rmse_loss"] = function
         elif not self.formulations.get("rmse_loss"):
-            self.formulations["rmse_loss"] = tf.reduce_sum
+            self.formulations["rmse_loss"] = lambda x, _: tf.reduce_sum(x)
         return self.formulations["rmse_loss"]
 
     def main_data_pipe(self):
@@ -100,9 +110,11 @@ class Constructor(object):
         biases = []
         others = []
 
-        def trainable_collect(w, b, o=None):
-            weights.append(w)
-            biases.append(b)
+        def trainable_collect(w=None, b=None, o=None):
+            if w:
+                weights.append(w)
+            if b:
+                biases.append(b)
             if o:
                 others.append(o)
 
