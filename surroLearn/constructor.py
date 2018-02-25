@@ -17,6 +17,10 @@ class Constructor(object):
                  learning_rate=None,
                  random_seed=None):
         """
+
+        Used to construct a graph using on execution phase.
+
+
         Args:
 
         graphGen:
@@ -26,7 +30,12 @@ class Constructor(object):
 
         inputs:
             A Tensor or NdArray with shape (batch_size, input_dim) contains
-            all available data for
+            all available data for training or A placeholder.
+
+        references:
+            Coresponding supervised learning references
+
+
 
 
         """
@@ -51,6 +60,7 @@ class Constructor(object):
         """
 
         if scale:
+
             def reg(w):
                 return sum(L2(w, scale))
 
@@ -85,12 +95,16 @@ class Constructor(object):
         return data.Dataset.static_tensor(*self.devider.test.all())
 
     def training_bake(self):
+
         weights = []
         biases = []
+        others = []
 
-        def trainable_collect(w, b):
+        def trainable_collect(w, b, o=None):
             weights.append(w)
             biases.append(b)
+            if o:
+                others.append(o)
 
         # Send all data into tensors
         ti, tr = self.main_data_pipe()
@@ -113,10 +127,11 @@ class Constructor(object):
 
             init_g = tf.global_variables_initializer()
             init_l = tf.local_variables_initializer()
-            init_d = self.main_pipe_initializer
+            init_d = tf.get_operation_by_name("epoch_init")
 
             tf.group(init_g, init_l, init_d, name="global_init")
 
         self.graph.finalize()
+        self.save_list = weights + biases + others
 
         return self.graph

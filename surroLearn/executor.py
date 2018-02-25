@@ -9,6 +9,28 @@ from datetime import datetime
 
 class Executor(object):
     def __init__(self, sess, graph, save_list, save_dir, evaluate_only=False):
+        """
+
+        With a finalized graph and a session given, run training / testing process
+
+        Args:
+
+        sess:
+            Tensorflow session object
+
+        graph:
+            finalized graph
+
+        save_list:
+            list of parameters needs to be saved / restored
+
+        save_dir:
+            directory path to save the model.
+
+        evaluate_only:
+            if true, only get predict related nodes from graph
+
+        """
 
         self.sess = sess
         self.graph = graph
@@ -33,6 +55,9 @@ class Executor(object):
         return self.sess.run(self.global_step)
 
     def train(self, epochs=50):
+        if self.evaluate_only:
+            raise UnableToTrainError("Attempt to run training process on a "
+                                     "evaluating model.")
         self.sess.run(self.epoch_init)
         for i in range(epochs):
             try:
@@ -76,3 +101,7 @@ class Executor(object):
         else:
             print(datetime.now(), ": [!] Loading checkpoints fail")
             return False
+
+
+class UnableToTrainError(Exception):
+    pass
