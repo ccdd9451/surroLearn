@@ -106,3 +106,7 @@ def load(filename):
 
     with open(filename, "rb") as f:
         return load(f)
+
+def compatible_load(filename):
+    d = load(filename)
+    return d["X"], d["Y"]

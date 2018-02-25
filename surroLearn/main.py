@@ -1,5 +1,22 @@
 #!/usr/bin/env python
 # encoding: utf-8
 
-def main():
-    print("Hello, world!")
+import tensorflow as tf
+
+from .constructor import Constructor
+from .executor import Executor
+from .maxout import stack_max_out
+
+
+def main(compatible_load_filename=None, save_dir="./save"):
+    if compatible_load_filename:
+        from .data import compatible_load
+        inputs, references = compatible_load(compatible_load_filename)
+
+    c = Constructor(stack_max_out, inputs, references)
+    g = c.training_bake()
+
+    with tf.Session() as sess:
+        e = Executor(sess, g, c.save_list, save_dir)
+        for i in range(4):
+            e.train()
