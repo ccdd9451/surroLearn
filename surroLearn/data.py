@@ -96,16 +96,18 @@ class Devider(object):
         self.shuffled_indicies = np.arange(self.test_cut)
         np.random.shuffle(self.shuffled_indicies)
 
-        self.train = Devider.Barrel(self.inputs[self.shuffled_data, :],
-                                    self.reference[self.shuffled_data, :])
+        self.train = Devider.Barrel(self.inputs[self.shuffled_indicies, :],
+                                    self.reference[self.shuffled_indicies, :])
         self.test = Devider.Barrel(self.inputs[self.test_cut:, :],
                                    self.reference[self.test_cut:, :])
+
 
 def load(filename):
     from pickle import load
 
     with open(filename, "rb") as f:
         return load(f)
+
 
 def compatible_load(filename):
     d = load(filename)
