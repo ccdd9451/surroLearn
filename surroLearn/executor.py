@@ -39,15 +39,16 @@ class Executor(object):
 
         self.saver = tf.train.Saver(save_list)
         self.global_step = tf.get_variable("global_step")
-        self.ref_rmse = tf.get_variable("ref_rmse")
-        self.inputs = tf.get_variable("inputs")
-        self.reference = tf.get_variable("reference")
+        self.ref_rmse = self.graph.get_tensor_by_name("ref_rmse:0")
+        self.inputs = self.graph.get_tensor_by_name("inputs:0")
+        self.outputs = self.graph.get_tensor_by_name("outputs:0")
 
         if not evaluate_only:
             self.global_init = tf.get_operation_by_name("global_init")
             self.epoch_init = tf.get_operation_by_name("epoch_init")
             self.train_op = tf.get_operation_by_name("train_op")
             self.global_step_inc = tf.get_operation_by_name("global_step_inc")
+            self.reference = self.graph.get_tensor_by_name("reference:0")
 
             self.sess.run(self.global_init)
 
@@ -82,7 +83,7 @@ class Executor(object):
 
     def predict(self, inputs):
         sample = {self.inputs: inputs}
-        prediction = self.sess.run(self.reference, feed_dict=sample)
+        prediction = self.sess.run(self.outputs, feed_dict=sample)
 
         return prediction
 

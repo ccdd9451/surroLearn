@@ -6,14 +6,18 @@ import tensorflow as tf
 from .constructor import Constructor
 from .executor import Executor
 from .maxout import stack_max_out
+from .data import unittest_sample
 
 
 def main(compatible_load_filename=None, save_dir="./save"):
     if compatible_load_filename:
         from .data import compatible_load
         inputs, references = compatible_load(compatible_load_filename)
+    else:
+        inputs, references = unittest_sample()
 
-    c = Constructor(stack_max_out, inputs, references)
+    m = stack_max_out(1000, 10, 6)
+    c = Constructor(m, inputs, references)
     g = c.training_bake()
 
     with tf.Session() as sess:

@@ -28,9 +28,8 @@ class Dataset(object):
     @staticmethod
     def shuffle_batch(inputs, reference, batch_size):
 
-        dat = tf.data.Dataset.from_tensor_slices(tuple(
-            inputs, reference)).shuffle().batch(
-                batch_size).make_initializable_iterator()
+        dat = tf.data.Dataset.from_tensor_slices((inputs, reference)).shuffle(
+            inputs.shape[0]).batch(batch_size).make_initializable_iterator()
         tf.group(dat.initializer, name="epoch_init")
 
         inp_t, ref_t = dat.get_next()
@@ -40,7 +39,7 @@ class Dataset(object):
         return inp_t, ref_t
 
     @staticmethod
-    def static_tensor(inputs, reference, batch_size):
+    def static_tensor(inputs, reference):
 
         with tf.variable_scope("extra_tensor"):
             inp_t = tf.convert_to_tensor(inputs, name="inputs")
@@ -65,8 +64,8 @@ class Devider(object):
             self.size = inp.shape[0]
 
         def __getitem__(self, sl):
-            start = int(sl.start * self.size)
-            stop = int(sl.stop * self.size)
+            start = int(sl.start * self.size) if sl.start else None
+            stop = int(sl.stop * self.size) if sl.stop else None
 
             return (self.inp[start:stop, :], self.ref[start:stop, :])
 
@@ -84,8 +83,8 @@ class Devider(object):
 
         self.inputs = inputs.astype(np.float32)
         self.reference = reference.astype(np.float32)
-        if reference.ndim == 1:
-            reference = reference[:, None]
+        if self.reference.ndim == 1:
+            self.reference = self.reference[:, None]
 
         data_size = self.inputs.shape[0]
         self.test_cut = int(data_size * shuffle_range)
@@ -112,3 +111,9 @@ def load(filename):
 def compatible_load(filename):
     d = load(filename)
     return d["X"], d["Y"]
+
+def unittest_sample():
+    inputs = np.random.randn(100, 10)
+    references = np.random.randn(100)
+
+    return inputs, references

@@ -26,6 +26,7 @@ class Constructor(object):
                  graphGen,
                  inputs,
                  references,
+                 shuffle_batch_size=256,
                  learning_rate=0.001,
                  random_seed=None):
         """
@@ -52,6 +53,7 @@ class Constructor(object):
         self.graphGen = graphGen
         self.formulations = {}
         self.learning_rate = learning_rate
+        self.shuffle_batch_size = shuffle_batch_size
         self.devider = data.Devider(inputs, references, seed=random_seed)
 
     def regularize_formulate(self, scale=None, function=None):
@@ -70,21 +72,25 @@ class Constructor(object):
 
         if scale:
 
-            def reg(w, _):
+            def reg(w, _=None):
                 return sum(L2(w, scale))
 
             self.formulations["regularize"] = reg
         elif function:
             self.formulations["regularize"] = function
 
-        return self.formulations.get("regularize", 0)
+        f = self.formulations.get("regularize", None)
+        if f:
+            return f
+        else:
+            return lambda *x: 0
 
     def rmse_loss_formulate(self, function=None):
         """
         Args:
 
         function:
-            A function f(weights, trainable_collect) takes all weights as input,
+            A function f(predicts, references, trainable_collect) takes all weights as input,
             and return the loss as output.
 
         """
@@ -92,11 +98,16 @@ class Constructor(object):
         if function:
             self.formulations["rmse_loss"] = function
         elif not self.formulations.get("rmse_loss"):
-            self.formulations["rmse_loss"] = lambda x, _: tf.reduce_sum(x)
+
+            def rmse(outputs, refs, _=None):
+                return tf.metrics.root_mean_squared_error(outputs, refs)
+
+            self.formulations["rmse_loss"] = rmse
         return self.formulations["rmse_loss"]
 
     def main_data_pipe(self):
-        return data.Dataset.shuffle_batch(*self.devider.train[:0.75])
+        return data.Dataset.shuffle_batch(*self.devider.train[:0.75],
+                                          self.shuffle_batch_size)
 
     def cross_vaild_pipe(self):
         return data.Dataset.static_tensor(*self.devider.train[0.75:])
@@ -123,13 +134,16 @@ class Constructor(object):
         _, _ = self.cross_vaild_pipe()
         _, _ = self.test_pipe()
 
+        ti = tf.identity(ti, name="inputs")
+        tr = tf.identity(tr, name="references")
         self.graph = self.graphGen(ti, tr, trainable_collect)
 
         with self.graph.as_default():
-            ref_rmse = tf.get_variable("ref_rmse")
-            ref_loss = tf.rmse_loss_formulate()(ref_rmse)
-            weights_loss = tf.regularize_formulate()(weights)
-            tot_loss = ref_loss + weights_loss
+            ref = self.graph.get_tensor_by_name("outputs:0")
+            ref_rmse = self.rmse_loss_formulate()(tr, ref)
+            ref_rmse = tf.identity(ref_rmse, name="ref_rmse")
+            weights_loss = self.regularize_formulate()(weights)
+            tot_loss = ref_rmse + weights_loss
 
             optimizer = tf.train.AdamOptimizer(self.learning_rate)
             optimizer.minimize(tot_loss, name="train_op")
