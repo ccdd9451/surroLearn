@@ -3,7 +3,6 @@
 
 import tensorflow as tf
 from . import data
-from .ops import L2
 
 
 class Constructor(object):
@@ -71,6 +70,7 @@ class Constructor(object):
         """
 
         if scale:
+            from .ops import L2
 
             def reg(w, _=None):
                 return sum(L2(w, scale))
@@ -98,15 +98,8 @@ class Constructor(object):
         if function:
             self.formulations["rmse_loss"] = function
         elif not self.formulations.get("rmse_loss"):
-
-            def rmse(outputs, refs, _=None):
-                diff = outputs - refs
-                sq = tf.square(diff)
-                mean = tf.reduce_mean(sq)
-                root = tf.sqrt(mean)
-                return root
-
-            self.formulations["rmse_loss"] = rmse
+            from .ops import RMSE
+            self.formulations["rmse_loss"] = RMSE
         return self.formulations["rmse_loss"]
 
     def main_data_pipe(self):

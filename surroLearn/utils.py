@@ -19,6 +19,9 @@ class Time(object):
         self._tick_amount = tick_amount
         self._start_time = time.time()
 
+    def now(self):
+        return datetime.now()
+
     def tick(self):
         self._count += 1
         self._latest_ticking = time.time()
