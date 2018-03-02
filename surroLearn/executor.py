@@ -9,6 +9,28 @@ from datetime import datetime
 
 class Executor(object):
     def __init__(self, sess, graph, save_list, save_dir, evaluate_only=False):
+        """
+
+        With a finalized graph and a session given, run training / testing process
+
+        Args:
+
+        sess:
+            Tensorflow session object
+
+        graph:
+            finalized graph
+
+        save_list:
+            list of parameters needs to be saved / restored
+
+        save_dir:
+            directory path to save the model.
+
+        evaluate_only:
+            if true, only get predict related nodes from graph
+
+        """
 
         self.sess = sess
         self.graph = graph
@@ -17,15 +39,16 @@ class Executor(object):
 
         self.saver = tf.train.Saver(save_list)
         self.global_step = tf.get_variable("global_step")
-        self.ref_rmse = tf.get_variable("ref_rmse")
-        self.inputs = tf.get_variable("inputs")
-        self.reference = tf.get_variable("reference")
+        self.ref_rmse = self.graph.get_tensor_by_name("ref_rmse:0")
+        self.inputs = self.graph.get_tensor_by_name("inputs:0")
+        self.outputs = self.graph.get_tensor_by_name("outputs:0")
 
         if not evaluate_only:
             self.global_init = tf.get_operation_by_name("global_init")
             self.epoch_init = tf.get_operation_by_name("epoch_init")
             self.train_op = tf.get_operation_by_name("train_op")
             self.global_step_inc = tf.get_operation_by_name("global_step_inc")
+            self.reference = self.graph.get_tensor_by_name("reference:0")
 
             self.sess.run(self.global_init)
 
@@ -33,6 +56,9 @@ class Executor(object):
         return self.sess.run(self.global_step)
 
     def train(self, epochs=50):
+        if self.evaluate_only:
+            raise UnableToTrainError("Attempt to run training process on a "
+                                     "evaluating model.")
         self.sess.run(self.epoch_init)
         for i in range(epochs):
             try:
@@ -57,7 +83,7 @@ class Executor(object):
 
     def predict(self, inputs):
         sample = {self.inputs: inputs}
-        prediction = self.sess.run(self.reference, feed_dict=sample)
+        prediction = self.sess.run(self.outputs, feed_dict=sample)
 
         return prediction
 
@@ -76,3 +102,7 @@ class Executor(object):
         else:
             print(datetime.now(), ": [!] Loading checkpoints fail")
             return False
+
+
+class UnableToTrainError(Exception):
+    pass

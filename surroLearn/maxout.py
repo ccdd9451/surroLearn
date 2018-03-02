@@ -17,7 +17,7 @@ def max_out(inputs, num_units):
                              num_channels, num_units))
     shape[-1] = num_units
     shape += [num_channels // num_units]
-    outputs = tf.reduce_max(tf.reshape(inputs, shape), -1, keepdims=False)
+    outputs = tf.reduce_max(tf.reshape(inputs, shape), -1, keep_dims=False)
     return outputs
 
 
@@ -35,7 +35,7 @@ def layer_max_out(inputs, num_outputs, scope, trainable_collect, num_units=10):
     return outputs
 
 
-def stack_max_out(inputs, num_cells, num_units, num_outputs, num_level,
+def _stack_max_out(inputs, num_cells, num_units, num_outputs, num_level,
                    trainable_collect):
     """
 
@@ -72,9 +72,34 @@ def stack_max_out(inputs, num_cells, num_units, num_outputs, num_level,
         activation_fn=tf.identity,
         scope="layer" + str(num_level))
 
-    with tf.variable_scope("layer"+str(num_level), reuse=True):
+    output = tf.identity(output, name="outputs")
+
+    with tf.variable_scope("layer" + str(num_level), reuse=True):
         w = tf.get_variable('weights')
         b = tf.get_variable('biases')
         trainable_collect(w, b)
 
     return output
+
+
+def stack_max_out(num_cells, num_units, num_level, num_outputs=None):
+    """
+    GraphGen generator
+    """
+
+    def graphGen(inputs, references, trainable_collect):
+        nonlocal num_outputs
+        if not num_outputs:
+            num_outputs = int(references.shape[1])
+        graph = tf.get_default_graph()
+        with graph.as_default():
+            _stack_max_out(
+                inputs=inputs,
+                num_cells=num_cells,
+                num_units=num_units,
+                num_outputs=num_outputs,
+                num_level=num_level,
+                trainable_collect=trainable_collect)
+        return graph
+
+    return graphGen
