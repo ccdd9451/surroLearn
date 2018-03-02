@@ -26,9 +26,11 @@ class Plot(object):
         self._fig.clear()
 
     def add_line(self, x, y, **kwargs):
+        if not kwargs.get("label"):
+            kwargs["label"] = self._name
         self._ax.plot(x, y, **kwargs)
 
 
 def BroadcastSave():
     for p in _plots:
-        p.Save()
+        p.save()
