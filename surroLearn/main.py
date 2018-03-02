@@ -38,19 +38,12 @@ class Main(object):
         lr = eval(lr)
         steps = int(steps)
 
-        from .ops import L2
-        from .utils import tensor_linear_interval_range
+        from .formulations import linear_regularizer
 
         m = stack_max_out(1000, 10, 6)
         c = Constructor(m, self._inputs, self._references)
 
-        def reg(w, *_):
-            lt = tensor_linear_interval_range(*lr, steps)
-            loss = L2(w, lt)
-            loss = tf.identity(loss, name="lambda_scale")
-            return loss
-
-        c.regularize_formulate(function=reg)
+        c.regularize_formulate(function=linear_regularizer(*lr, steps))
 
         g = c.training_bake()
         s = steps // 50
@@ -63,4 +56,5 @@ class Main(object):
                 print("Estimate time finishing", t.tick())
 
     def ls(self):
-        print(dir(self))
+        commands = [x for x in dir(self) if not x.startswith("_")]
+        print("\t".join(commands))
