@@ -136,6 +136,9 @@ class Constructor(object):
         self.graph = self.graphGen(ti, tr, trainable_collect)
 
         with self.graph.as_default():
+            epoch = tf.get_variable(name="global_step", initializer=0)
+            tf.assign_add(epoch, 1, name="global_step_inc")
+
             ref = self.graph.get_tensor_by_name("outputs:0")
             ref_rmse = self.rmse_loss_formulate()(tr, ref)
             ref_rmse = tf.identity(ref_rmse, name="ref_rmse")
@@ -144,9 +147,6 @@ class Constructor(object):
 
             optimizer = tf.train.AdamOptimizer(self.learning_rate)
             optimizer.minimize(tot_loss, name="train_op")
-
-            epoch = tf.get_variable(name="global_step", initializer=0)
-            tf.assign_add(epoch, 1, name="global_step_inc")
 
             init_g = tf.global_variables_initializer()
             init_l = tf.local_variables_initializer()

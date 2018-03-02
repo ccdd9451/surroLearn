@@ -46,10 +46,9 @@ def L2(weights, scale):
 
     """
 
-    scale = tf.Variables(scale)
     weights = map(tf.square, weights)
     weights = map(tf.reduce_sum, weights)
     weights = sum(weights)
-    losses = scale * weights
+    losses =  weights * scale
 
     return losses
