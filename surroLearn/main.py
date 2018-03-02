@@ -7,7 +7,6 @@ import tensorflow as tf
 from .constructor import Constructor
 from .executor import Executor
 from .maxout import stack_max_out
-from .data import unittest_sample
 
 
 def main(compatible_load_filename=None, save_dir="./save"):
@@ -17,8 +16,6 @@ def main(compatible_load_filename=None, save_dir="./save"):
     if compatible_load_filename:
         from .data import compatible_load
         inputs, references = compatible_load(compatible_load_filename)
-    else:
-        inputs, references = unittest_sample()
 
     m = stack_max_out(1000, 10, 6)
     c = Constructor(m, inputs, references)
@@ -28,4 +25,5 @@ def main(compatible_load_filename=None, save_dir="./save"):
         e = Executor(sess, g, c.save_list, save_dir)
         for i in range(4):
             e.train()
+
             e.evaluate(*c.test_pipe())
