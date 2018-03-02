@@ -36,4 +36,4 @@ class MainTest(tf.test.TestCase):
                     "Y": references,
                 }, f)
 
-            sl.main.lambda_inc(str(tempdata), 10**-8, 1, 500)
+            sl.main.lambda_inc(str(tempdata), "[10**-8, 1]", 500)

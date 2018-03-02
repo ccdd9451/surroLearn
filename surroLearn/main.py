@@ -30,9 +30,8 @@ def main(filename=None, save_dir="./save", compatiable=True):
             e.evaluate(*c.test_pipe())
 
 
-def lambda_inc(filename, lrange1, lrange2, steps):
-    lrange1 = float(lrange1)
-    lrange2 = float(lrange2)
+def lambda_inc(filename, lr, steps):
+    lr = eval(lr)
     steps = int(steps)
 
     from .data import compatible_load
@@ -45,7 +44,7 @@ def lambda_inc(filename, lrange1, lrange2, steps):
     c = Constructor(m, inputs, references)
 
     def reg(w, *_):
-        lt = tensor_geo_interval_range(lrange1, lrange2, steps)
+        lt = tensor_geo_interval_range(*lr, steps)
         return L2(w, lt)
 
     c.regularize_formulate(function=reg)
