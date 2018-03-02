@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # encoding: utf-8
 
+import os
 import tensorflow as tf
 
 from .constructor import Constructor
@@ -10,6 +11,9 @@ from .data import unittest_sample
 
 
 def main(compatible_load_filename=None, save_dir="./save"):
+
+    os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
+
     if compatible_load_filename:
         from .data import compatible_load
         inputs, references = compatible_load(compatible_load_filename)
@@ -24,3 +28,4 @@ def main(compatible_load_filename=None, save_dir="./save"):
         e = Executor(sess, g, c.save_list, save_dir)
         for i in range(4):
             e.train()
+            e.evaluate(*c.test_pipe())

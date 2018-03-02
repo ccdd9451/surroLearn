@@ -38,39 +38,46 @@ class Executor(object):
         self.save_dir = save_dir
 
         self.saver = tf.train.Saver(save_list)
-        self.global_step = tf.get_variable("global_step")
+        self.graph.finalize()
+
+        with tf.variable_scope("", reuse=True):
+            self.global_step = tf.get_variable(name="global_step", dtype=tf.int32)
+
         self.ref_rmse = self.graph.get_tensor_by_name("ref_rmse:0")
         self.inputs = self.graph.get_tensor_by_name("inputs:0")
         self.outputs = self.graph.get_tensor_by_name("outputs:0")
 
+        self.evaluate_only = evaluate_only
         if not evaluate_only:
-            self.global_init = tf.get_operation_by_name("global_init")
-            self.epoch_init = tf.get_operation_by_name("epoch_init")
-            self.train_op = tf.get_operation_by_name("train_op")
-            self.global_step_inc = tf.get_operation_by_name("global_step_inc")
+            self.global_init = self.graph.get_operation_by_name("global_init")
+            self.epoch_init = self.graph.get_operation_by_name("epoch_init")
+            self.train_op = self.graph.get_operation_by_name("train_op")
+            self.global_step_inc = self.graph.get_operation_by_name("global_step_inc")
             self.reference = self.graph.get_tensor_by_name("reference:0")
 
             self.sess.run(self.global_init)
 
-    def global_step(self):
-        return self.sess.run(self.global_step)
 
     def train(self, epochs=50):
         if self.evaluate_only:
             raise UnableToTrainError("Attempt to run training process on a "
                                      "evaluating model.")
         self.sess.run(self.epoch_init)
+        print("Start Batch Training, losses:")
         for i in range(epochs):
             try:
                 while True:
-                    self.sess.run(self.train_op)
-            except tf.errors.OutofRangeError:
-                pass
+                    rmse, _ = self.sess.run([self.ref_rmse, self.train_op])
+                    print(rmse, end="\t")
+            except tf.errors.OutOfRangeError:
+                self.sess.run(self.epoch_init)
+                self.sess.run(self.global_step_inc)
 
-        global_step = self.global_step()
+        global_step = self.sess.run(self.global_step)
         print(datetime.now(), "Training on step ", global_step, " finished.")
 
-    def evaluate(self, inputs, reference, msg):
+    def evaluate(self, inputs, reference, msg=""):
+
         sample = {
             self.inputs: inputs,
             self.reference: reference,

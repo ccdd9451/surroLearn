@@ -100,7 +100,11 @@ class Constructor(object):
         elif not self.formulations.get("rmse_loss"):
 
             def rmse(outputs, refs, _=None):
-                return tf.metrics.root_mean_squared_error(outputs, refs)
+                diff = outputs - refs
+                sq = tf.square(diff)
+                mean = tf.reduce_mean(sq)
+                root = tf.sqrt(mean)
+                return root
 
             self.formulations["rmse_loss"] = rmse
         return self.formulations["rmse_loss"]
@@ -110,10 +114,10 @@ class Constructor(object):
                                           self.shuffle_batch_size)
 
     def cross_vaild_pipe(self):
-        return data.Dataset.static_tensor(*self.devider.train[0.75:])
+        return self.devider.train[0.75:]
 
     def test_pipe(self):
-        return data.Dataset.static_tensor(*self.devider.test.all())
+        return self.devider.test.all()
 
     def training_bake(self):
 
@@ -148,16 +152,18 @@ class Constructor(object):
             optimizer = tf.train.AdamOptimizer(self.learning_rate)
             optimizer.minimize(tot_loss, name="train_op")
 
-            epoch = tf.Variable(0, trainable=False, name="global_step")
+            epoch = tf.get_variable(name="global_step", initializer=0)
             tf.assign_add(epoch, 1, name="global_step_inc")
 
             init_g = tf.global_variables_initializer()
             init_l = tf.local_variables_initializer()
-            init_d = tf.get_operation_by_name("epoch_init")
+            init_d = self.graph.get_operation_by_name("epoch_init")
 
             tf.group(init_g, init_l, init_d, name="global_init")
 
-        self.graph.finalize()
+            from .utils import export_graph
+            export_graph("/home/kaidong/logs/")
+
         self.save_list = weights + biases + others
 
         return self.graph
