@@ -101,15 +101,23 @@ class Executor(object):
 
         return prediction
 
-    def tick(self, **kwargs):
+    def add_tick(self, var, func):
+        self._tick_list.append([var, func, []])
+
+    def tick(self, update=True, **kwargs):
         g = self._sess.run(self.global_step)
         self._tick_timestamp.append(g)
         for var, func, results in self._tick_list:
+            if not update:
+                func(self._tick_timestamp, results, **kwargs)
+                continue
             if callable(var):
                 results.append(var())
-            else:
+            elif isinstance(var, str):
                 tensor = self._graph.get_tensor_by_name(var + ":0")
                 results.append(self._sess.run(tensor))
+            else:
+                raise TypeError("unsupported type: ", type(var))
             func(self._tick_timestamp, results, **kwargs)
 
     def save_model(self):
