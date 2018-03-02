@@ -21,9 +21,9 @@ class MainTest(tf.test.TestCase):
                     "X": inputs,
                     "Y": references,
                 }, f)
-
-            sl.main.main(str(tempdata))
-
+            m = sl.main.Main()
+            m.cfile(str(tempdata))
+            m.main()
 
     def test_MainStream_l2_exp_inc(self):
         with TemporaryDirectory() as tdname:
@@ -36,4 +36,6 @@ class MainTest(tf.test.TestCase):
                     "Y": references,
                 }, f)
 
-            sl.main.lambda_inc(str(tempdata), "[10**-8, 1]", 500)
+            m = sl.main.Main()
+            m.cfile(str(tempdata))
+            m.lambda_inc("[10**-8, 1]", 500)

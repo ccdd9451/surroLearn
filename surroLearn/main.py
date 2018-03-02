@@ -13,12 +13,15 @@ os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
 
 class Main(object):
-    def __init__(self, filename, save_dir="./save", compatiable=True):
-        self._filename = filename
-        self._save_dir = save_dir
-        if compatiable:
-            from .data import compatible_load
-            self._inputs, self._references = compatible_load(filename)
+    def __init__(self):
+        self.save_dir = ""
+
+    def cfile(self, filename):
+
+        from .data import compatible_load
+        self._inputs, self._references = compatible_load(filename)
+
+        return self
 
     def main(self):
         m = stack_max_out(1000, 10, 6)
@@ -26,7 +29,7 @@ class Main(object):
         g = c.training_bake()
 
         with tf.Session() as sess:
-            e = Executor(sess, g, c.save_list, self._save_dir)
+            e = Executor(sess, g, c.save_list, self.save_dir)
             for i in range(4):
                 e.train()
                 e.evaluate(*c.test_pipe())
@@ -44,7 +47,7 @@ class Main(object):
         def reg(w, *_):
             lt = tensor_linear_interval_range(*lr, steps)
             loss = L2(w, lt)
-            loss = tf.identity(loss, name = "lambda_scale")
+            loss = tf.identity(loss, name="lambda_scale")
             return loss
 
         c.regularize_formulate(function=reg)
@@ -58,3 +61,6 @@ class Main(object):
                 e.train()
                 e.evaluate(*c.test_pipe())
                 print("Estimate time finishing", t.tick())
+
+    def ls(self):
+        print(dir(self))

@@ -77,12 +77,7 @@ class Executor(object):
                 self._sess.run(self.global_step_inc)
 
         global_step = self._sess.run(self.global_step)
-        print(
-            datetime.now(),
-            "Training on step ",
-            global_step,
-            " finished.",
-            end="\r")
+        print(datetime.now(), "Training on step ", global_step, " finished.")
 
     def evaluate(self, inputs, reference, msg=""):
 

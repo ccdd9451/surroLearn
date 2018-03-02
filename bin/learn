@@ -5,5 +5,4 @@ import fire
 import surroLearn as sl
 
 if __name__ == '__main__':
-    fire.Fire(sl.main)
-
+    fire.Fire(sl.main.Main)
