@@ -39,6 +39,7 @@ class Executor(object):
 
         self._saver = tf.train.Saver(save_list)
         self._graph.finalize()
+        self._tick_list = []
 
         with tf.variable_scope("", reuse=True):
             self.global_step = tf.get_variable(
@@ -76,7 +77,12 @@ class Executor(object):
                 self._sess.run(self.global_step_inc)
 
         global_step = self._sess.run(self.global_step)
-        print(datetime.now(), "Training on step ", global_step, " finished.")
+        print(
+            datetime.now(),
+            "Training on step ",
+            global_step,
+            " finished.",
+            end="\r")
 
     def evaluate(self, inputs, reference, msg=""):
 
@@ -86,7 +92,6 @@ class Executor(object):
         }
 
         rmse = self._sess.run(self.ref_rmse, feed_dict=sample)
-        print(datetime.now(), "Evaluating on ", msg, ": ", rmse)
 
         return rmse
 
@@ -95,6 +100,17 @@ class Executor(object):
         prediction = self._sess.run(self.outputs, feed_dict=sample)
 
         return prediction
+
+    def tick(self, **kwargs):
+        g = self._sess.run(self.global_step)
+        self._tick_timestamp.append(g)
+        for var, func, results in self._tick_list:
+            if callable(var):
+                results.append(var())
+            else:
+                tensor = self._graph.get_tensor_by_name(var + ":0")
+                results.append(self._sess.run(tensor))
+            func(self._tick_timestamp, results, **kwargs)
 
     def save_model(self):
         print(datetime.now(), ":Saving checkpoints...")

@@ -38,5 +38,11 @@ class Time(object):
 def tensor_geo_interval_range(begin, end, step_amount):
     with tf.variable_scope("", reuse=True):
         global_step = tf.get_variable(name="global_step", dtype=tf.int32)
-    return tf.train.exponential_decay(float(begin), global_step, step_amount,
-                                      end / begin)
+    return tf.train.exponential_decay(
+        float(begin), global_step, step_amount, end / begin)
+
+
+def tensor_linear_interval_range(begin, end, step_amount):
+    with tf.variable_scope("", reuse=True):
+        global_step = tf.get_variable(name="global_step", dtype=tf.int32)
+    return (global_step / step_amount) * (end - begin) + begin

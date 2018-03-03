@@ -12,49 +12,49 @@ from .utils import Time
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
 
-def main(filename=None, save_dir="./save", compatiable=True):
+class Main(object):
+    def __init__(self, filename, save_dir="./save", compatiable=True):
+        self._filename = filename
+        self._save_dir = save_dir
+        if compatiable:
+            from .data import compatible_load
+            self._inputs, self._references = compatible_load(filename)
 
-    if compatiable:
-        from .data import compatible_load
-        inputs, references = compatible_load(filename)
+    def main(self):
+        m = stack_max_out(1000, 10, 6)
+        c = Constructor(m, self._inputs, self._references)
+        g = c.training_bake()
 
-    m = stack_max_out(1000, 10, 6)
-    c = Constructor(m, inputs, references)
-    g = c.training_bake()
+        with tf.Session() as sess:
+            e = Executor(sess, g, c.save_list, self._save_dir)
+            for i in range(4):
+                e.train()
+                e.evaluate(*c.test_pipe())
 
-    with tf.Session() as sess:
-        e = Executor(sess, g, c.save_list, save_dir)
-        for i in range(4):
-            e.train()
+    def lambda_inc(self, lr, steps):
+        lr = eval(lr)
+        steps = int(steps)
 
-            e.evaluate(*c.test_pipe())
+        from .ops import L2
+        from .utils import tensor_linear_interval_range
 
+        m = stack_max_out(1000, 10, 6)
+        c = Constructor(m, self._inputs, self._references)
 
-def lambda_inc(filename, lr, steps):
-    lr = eval(lr)
-    steps = int(steps)
+        def reg(w, *_):
+            lt = tensor_linear_interval_range(*lr, steps)
+            loss = L2(w, lt)
+            loss = tf.identity(loss, name = "lambda_scale")
+            return loss
 
-    from .data import compatible_load
-    from .ops import L2
-    from .utils import tensor_geo_interval_range
+        c.regularize_formulate(function=reg)
 
-    inputs, references = compatible_load(filename)
-
-    m = stack_max_out(1000, 10, 6)
-    c = Constructor(m, inputs, references)
-
-    def reg(w, *_):
-        lt = tensor_geo_interval_range(*lr, steps)
-        return L2(w, lt)
-
-    c.regularize_formulate(function=reg)
-
-    g = c.training_bake()
-    s = steps // 50
-    t = Time(s)
-    with tf.Session() as sess:
-        e = Executor(sess, g, c.save_list, "")
-        for i in range(s):
-            e.train()
-            e.evaluate(*c.test_pipe())
-            print("Estimate time finishing", t.tick())
+        g = c.training_bake()
+        s = steps // 50
+        t = Time(s)
+        with tf.Session() as sess:
+            e = Executor(sess, g, c.save_list, "")
+            for i in range(s):
+                e.train()
+                e.evaluate(*c.test_pipe())
+                print("Estimate time finishing", t.tick())
