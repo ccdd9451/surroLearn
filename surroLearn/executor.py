@@ -4,6 +4,8 @@
 import os
 import tensorflow as tf
 
+from .utils import nilfunc
+from .recorder import Recorder
 from datetime import datetime
 
 
@@ -38,11 +40,12 @@ class Executor(object):
         self._save_dir = save_dir
 
         self._saver = tf.train.Saver(save_list)
+
         self._graph.finalize()
         self._tick_list = []
 
         with tf.variable_scope("", reuse=True):
-            self.global_step = tf.get_variable(
+            self._global_step = tf.get_variable(
                 name="global_step", dtype=tf.int32)
 
         self.ref_rmse = self._graph.get_tensor_by_name("ref_rmse:0")
@@ -54,13 +57,17 @@ class Executor(object):
             self.global_init = self._graph.get_operation_by_name("global_init")
             self.epoch_init = self._graph.get_operation_by_name("epoch_init")
             self.train_op = self._graph.get_operation_by_name("train_op")
-            self.global_step_inc = self._graph.get_operation_by_name(
+            self._global_step_inc = self._graph.get_operation_by_name(
                 "global_step_inc")
             self.reference = self._graph.get_tensor_by_name("reference:0")
 
             self._sess.run(self.global_init)
 
-        self.train_losses = []
+        self.rmse_hist = Recorder()
+        self.rmse_hist.timer = self.global_step
+
+    def global_step(self):
+        return self._sess.run(self._global_step)
 
     def train(self, epochs=50):
         if self.evaluate_only:
@@ -71,22 +78,22 @@ class Executor(object):
             try:
                 while True:
                     rmse, _ = self._sess.run([self.ref_rmse, self.train_op])
-                    self.train_losses.append(rmse)
             except tf.errors.OutOfRangeError:
                 self._sess.run(self.epoch_init)
-                self._sess.run(self.global_step_inc)
+                self._sess.run(self._global_step_inc)
+        self.rmse_hist.record("train", rmse)
 
-        global_step = self._sess.run(self.global_step)
+        global_step = self._sess.run(self._global_step)
         print(datetime.now(), "Training on step ", global_step, " finished.")
 
-    def evaluate(self, inputs, reference, msg=""):
-
+    def evaluate(self, inputs, reference, cls):
         sample = {
             self.inputs: inputs,
             self.reference: reference,
         }
 
         rmse = self._sess.run(self.ref_rmse, feed_dict=sample)
+        self.rmse_hist.record(cls, rmse)
 
         return rmse
 
@@ -96,31 +103,28 @@ class Executor(object):
 
         return prediction
 
-    def add_tick(self, var, func):
-        self._tick_list.append([var, func, []])
+    def add_tick(self, var, func=nilfunc):
+        self._tick_list.append([var, func])
 
     def tick(self, update=True, **kwargs):
-        g = self._sess.run(self.global_step)
-        self._tick_timestamp.append(g)
-        for var, func, results in self._tick_list:
+        for var, func in self._tick_list:
             if not update:
-                func(self._tick_timestamp, results, **kwargs)
+                func(*self.rmse_hist.serialize(var), **kwargs)
                 continue
-            if callable(var):
-                results.append(var())
-            elif isinstance(var, str):
+            if isinstance(var, str):
                 tensor = self._graph.get_tensor_by_name(var + ":0")
-                results.append(self._sess.run(tensor))
+                output = self._sess.run(tensor)
+                self.rmse_hist.record(var, output)
             else:
                 raise TypeError("unsupported type: ", type(var))
-            func(self._tick_timestamp, results, **kwargs)
+            func(*self.rmse_hist.serialize(var), **kwargs)
 
     def save_model(self):
         print(datetime.now(), ":Saving checkpoints...")
         if not os.path.exists(self._save_dir):
             os.makedirs(self._save_dir)
         self._saver.save(
-            self._sess, self._save_dir, global_step=self.global_step)
+            self._sess, self._save_dir, _global_step=self._global_step)
 
     def load_model(self):
         ckpt = tf.train.latest_checkpoint(self._save_dir)

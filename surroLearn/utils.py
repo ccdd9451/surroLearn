@@ -47,3 +47,7 @@ def tensor_linear_interval_range(begin, end, step_amount):
         global_step = tf.get_variable(name="global_step", dtype=tf.int32)
         global_step = tf.cast(global_step, tf.float32)
     return (global_step / step_amount) * (end - begin) + begin
+
+
+def nilfunc(*argv):
+    pass

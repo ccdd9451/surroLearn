@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 # encoding: utf-8
 
+import sys
+import fire
 import pickle
 import unittest
 import numpy as np
@@ -9,37 +11,54 @@ import tensorflow as tf
 
 from pathlib import Path
 from tempfile import TemporaryDirectory
+from mock import patch
 
 
 class MainTest(tf.test.TestCase):
-
-    @unittest.skip("interface changed")
-    def test_MainStream_Simplest_w_Cmpfile(self):
+    def _fakeDataTest(self, command):
         with TemporaryDirectory() as tdname:
             tempdata = Path(tdname) / "data"
-            inputs = np.random.randn(100, 10)
-            references = np.random.randn(100)
+            tempdata = str(tempdata)
+            inputs = np.random.randn(500, 10)
+            references = np.random.randn(500)
             with open(tempdata, "wb") as f:
                 pickle.dump({
                     "X": inputs,
                     "Y": references,
                 }, f)
-            m = sl.main.Main()
-            m.cfile(str(tempdata))
-            m.main()
+            testargs = command.format(tempdata)
+            with patch.object(sys, 'argv', testargs.split()):
+                fire.Fire(sl.main.Main)
 
-    @unittest.skip("interface changed")
+    @unittest.skip("temp")
+    def test_Plotting_Multis(self):
+        self._fakeDataTest("learn cfile {} steps 1000 "
+                           "stack_maxout smpl_train "
+                           "plot_item train|cross_valid|test "
+                           "plot_item lambda_scale "
+                           "lambda_inc (0,0.1) train")
+
     def test_MainStream_l2_exp_inc(self):
-        with TemporaryDirectory() as tdname:
-            tempdata = Path(tdname) / "data"
-            inputs = np.random.randn(100, 10)
-            references = np.random.randn(100)
-            with open(tempdata, "wb") as f:
-                pickle.dump({
-                    "X": inputs,
-                    "Y": references,
-                }, f)
+        self._fakeDataTest("learn cfile {} steps 1000 "
+                           "stack_maxout smpl_train "
+                           "lambda_inc (0,0.01) train")
 
-            m = sl.main.Main()
-            m.cfile(str(tempdata))
-            m.lambda_inc("[10**-8, 1]", 500)
+    def test_L2_graph_export(self):
+        self._fakeDataTest("learn cfile {} steps 1000 "
+                           "stack_maxout smpl_train "
+                           "lambda_inc (0,0.01) export_graph train")
+
+    def test_Workup_Performance(self):
+        self._fakeDataTest("learn cfile {} steps 1000 "
+                           "stack_maxout smpl_train "
+                           "plot_item train|cross_valid|test "
+                           "plot_item lambda_scale "
+                           "lambda_inc (0,0.001) export_graph train "
+                           "find,min,cross_valid|argvar,train "
+                           "find,min,cross_valid|argvar,test")
+
+
+    def test_CLI_ls(self):
+        testargs = ["learn", "ls"]
+        with patch.object(sys, 'argv', testargs):
+            fire.Fire(sl.main.Main)

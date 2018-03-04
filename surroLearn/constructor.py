@@ -55,7 +55,7 @@ class Constructor(object):
         self.shuffle_batch_size = shuffle_batch_size
         self.devider = data.Devider(inputs, references, seed=random_seed)
 
-    def regularize_formulate(self, scale=None, function=None):
+    def regularize_formulate(self, scale=None):
         """
         Args:
 
@@ -69,15 +69,15 @@ class Constructor(object):
 
         """
 
-        if scale:
+        if callable(scale):
+            self.formulations["regularize"] = scale
+        elif scale:
             from .ops import L2
 
             def reg(w, _=None):
                 return sum(L2(w, scale))
 
             self.formulations["regularize"] = reg
-        elif function:
-            self.formulations["regularize"] = function
 
         f = self.formulations.get("regularize", None)
         if f:
@@ -141,9 +141,10 @@ class Constructor(object):
 
             ref = self.graph.get_tensor_by_name("outputs:0")
             ref_rmse = self.rmse_loss_formulate()(tr, ref)
-            ref_rmse = tf.identity(ref_rmse, name="ref_rmse")
             weights_loss = self.regularize_formulate()(weights)
             tot_loss = ref_rmse + weights_loss
+
+            ref_rmse = tf.identity(ref_rmse, name="ref_rmse")
 
             optimizer = tf.train.AdamOptimizer(self.learning_rate)
             optimizer.minimize(tot_loss, name="train_op")
@@ -153,9 +154,6 @@ class Constructor(object):
             init_d = self.graph.get_operation_by_name("epoch_init")
 
             tf.group(init_g, init_l, init_d, name="global_init")
-
-            from .utils import export_graph
-            export_graph("/home/kaidong/logs/")
 
         self.save_list = weights + biases + others
 
