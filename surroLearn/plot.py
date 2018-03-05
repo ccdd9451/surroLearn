@@ -1,10 +1,14 @@
 #!/usr/bin/env python
 # encoding: utf-8
 
+import matplotlib as mpl
+mpl.use('Agg')
+import matplotlib.pyplot as plt
+plt.ioff()
+
 from .recorder import Recorder
 from pathlib import Path
 from matplotlib import style
-from matplotlib import pyplot as plt
 
 style.use("ggplot")
 
