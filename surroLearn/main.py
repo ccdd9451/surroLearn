@@ -19,9 +19,9 @@ Worklist = namedtuple("Worklist", ["inputs", "construct", "execute"])
 
 
 class Main(object):
-    def __init__(self):
-        self.save_dir = "."
-        self.epoch_each = 50
+    def __init__(self, save_dir=".", epoch_each=50):
+        self.save_dir = save_dir
+        self.epoch_each = epoch_each
 
         self._worklist = Worklist._make([[], [], []])
         self._route = []
