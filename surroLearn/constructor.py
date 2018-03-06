@@ -140,7 +140,7 @@ class Constructor(object):
             tf.equal(pipe, "cross_valid"): self.cross_vaild_pipe,
             tf.equal(pipe, "test"): self.test_pipe,
         }
-        ti, tr = tf.case(compare)
+        ti, tr = tf.case(compare, exclusive=True)
         ti = tf.identity(ti, name="inputs")
         tr = tf.identity(tr, name="references")
         self.graph = self.graphGen(ti, tr, trainable_collect)

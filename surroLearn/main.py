@@ -18,9 +18,9 @@ os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
 Worklist = namedtuple("Worklist", ["inputs", "construct", "execute"])
 
-
 class Main(object):
     def __init__(self, save_dir=".", slots=250):
+        global path
         path = Path(save_dir).expanduser()
         path.mkdir(parents=True, exist_ok=True)
         self.save_dir = str(path)
@@ -180,7 +180,8 @@ lines = []
 def workupParser(pipe=None):
     if not pipe:
         if lines:
-            with open("workups", "w") as f:
+            filename = str(path / "workups")
+            with open(filename, "w") as f:
                 f.write("\n".join(lines))
         return
 
