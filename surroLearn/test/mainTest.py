@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # encoding: utf-8
 
+import os
 import sys
 import fire
 import pickle
@@ -12,6 +13,8 @@ import tensorflow as tf
 from pathlib import Path
 from tempfile import TemporaryDirectory
 from mock import patch
+
+sys.stdout = open(os.devnull, 'w')
 
 
 class MainTest(tf.test.TestCase):
@@ -30,42 +33,49 @@ class MainTest(tf.test.TestCase):
             with patch.object(sys, 'argv', testargs.split()):
                 fire.Fire(sl.main.Main)
 
-    #@unittest.skip("temp")
+    @unittest.skip("same func in test_Workup_Performance")
     def test_Plotting_Multis(self):
         self._fakeDataTest("learn --save_dir=.pytest_cache/pm "
-                           "--slots=5 cfile {} steps 1000 "
+                           "--slots=5 cfile {} steps 10 "
                            "stack_maxout smpl_train "
                            "plot_item train|cross_valid|test "
                            "plot_item lambda_scale "
                            "lambda_inc (0,0.1) train")
 
+    @unittest.skip("same func in test_Workup_Performance")
     def test_MainStream_l2_inc(self):
         self._fakeDataTest("learn --save_dir=.pytest_cache/li "
-                           "--slots=10 cfile {} steps 1000 "
+                           "--slots=10 cfile {} steps 10 "
                            "stack_maxout smpl_train "
                            "plot_item train|cross_valid|test "
                            "lambda_inc (0,0.01) train")
 
     def test_MainStream_l2_static(self):
         self._fakeDataTest("learn --save_dir=.pytest_cache/ls "
-                           "--slots=5 cfile {} steps 1000 "
+                           "--slots=5 cfile {} steps 10 "
                            "stack_maxout smpl_train "
                            "plot_item train|cross_valid|test "
                            "lambda_static 0.1 train")
 
+    def test_Simplest_Timeit(self):
+        self._fakeDataTest("learn --save_dir=.pytest_cache/st "
+                           "--slots=5 cfile {} steps 10 "
+                           "stack_maxout smpl_train "
+                           "timeit train")
+
     def test_L2_graph_export(self):
         self._fakeDataTest("learn --save_dir=.pytest_cache/lge "
-                           "--slots=5 cfile {} steps 1000 "
+                           "--slots=5 cfile {} steps 10 "
                            "stack_maxout smpl_train "
                            "lambda_inc (0,0.01) export_graph train")
 
     def test_Workup_Performance(self):
         self._fakeDataTest("learn --save_dir=.pytest_cache/wp "
-                           "--slots=5 cfile {} steps 1000 "
+                           "--slots=5 cfile {} steps 10 "
                            "stack_maxout smpl_train "
                            "plot_item train|cross_valid|test "
                            "plot_item lambda_scale "
-                           "lambda_inc (0,0.001) export_graph train "
+                           "lambda_inc (0,0.1) train "
                            "find,min,cross_valid|argvar,train "
                            "find,min,cross_valid|argvar,test")
 

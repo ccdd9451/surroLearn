@@ -110,7 +110,7 @@ class Main(object):
         """ (optional) add time estimation to the training process"""
 
         def w():
-            t = Time(self._train_times)
+            t = Time(self.slots)
             self._route.append(
                 lambda: print("Esitmate time finishing", t.tick()))
 
