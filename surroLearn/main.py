@@ -19,7 +19,7 @@ os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 Worklist = namedtuple("Worklist", ["inputs", "construct", "execute"])
 
 class Main(object):
-    def __init__(self, save_dir=".", slots=250):
+    def __init__(self, save_dir=".", slots=100):
         global path
         path = Path(save_dir).expanduser()
         path.mkdir(parents=True, exist_ok=True)
