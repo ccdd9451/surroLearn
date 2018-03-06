@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # encoding: utf-8
 
+import threading
 import matplotlib as mpl
 mpl.use('Agg')
 import matplotlib.pyplot as plt
@@ -11,10 +12,29 @@ from pathlib import Path
 from matplotlib import style
 
 style.use("ggplot")
-
 _plots = []
-
+_last_thread = None
 recorder = Recorder()
+
+def run_in_thread(fn):
+    def run(*k, **kw):
+        global _last_thread
+        if _last_thread:
+            _last_thread.join()
+        _last_thread = threading.Thread(target=fn, args=k, kwargs=kw)
+        _last_thread.start()
+
+    return run
+
+
+@run_in_thread
+def BroadcastSave():
+    for p in _plots:
+        p.save()
+
+
+def PlotsClear():
+    del _plots[:]
 
 
 class Plot(object):
@@ -42,10 +62,4 @@ class Plot(object):
         self._ax.plot(x, y, **kwargs)
 
 
-def BroadcastSave():
-    for p in _plots:
-        p.save()
 
-
-def PlotsClear():
-    del _plots[:]
