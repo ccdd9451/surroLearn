@@ -5,6 +5,7 @@ import os
 import tensorflow as tf
 
 from collections import namedtuple
+from pathlib import Path
 from . import workup
 from .constructor import Constructor
 from .executor import Executor
@@ -19,9 +20,11 @@ Worklist = namedtuple("Worklist", ["inputs", "construct", "execute"])
 
 
 class Main(object):
-    def __init__(self, save_dir=".", epoch_each=50):
-        self.save_dir = save_dir
-        self.epoch_each = epoch_each
+    def __init__(self, save_dir=".", slots=250):
+        path = Path(save_dir).expanduser()
+        path.mkdir(parents=True, exist_ok=True)
+        self.save_dir = str(path)
+        self.slots = slots
 
         self._worklist = Worklist._make([[], [], []])
         self._route = []
@@ -34,7 +37,7 @@ class Main(object):
 
         def w():
             self._steps = steps
-            self._train_times = steps // self.epoch_each
+            self._epoch_each = steps // self.slots
 
         self._worklist.inputs.append(w)
 
@@ -80,16 +83,11 @@ class Main(object):
                                       self._constructor.training_bake(),
                                       self._constructor.save_list,
                                       self.save_dir)
+            self._route.insert(0, lambda: self._executor.evaluate("test"))
             self._route.insert(0,
-                               lambda: self._executor.train(self.epoch_each))
-            self._route.insert(
-                1,
-                lambda: self._executor.evaluate(*self._constructor.cross_vaild_pipe(), "cross_valid")
-            )
-            self._route.insert(
-                2,
-                lambda: self._executor.evaluate(*self._constructor.test_pipe(), "test")
-            )
+                               lambda: self._executor.evaluate("cross_valid"))
+            self._route.insert(0,
+                               lambda: self._executor.train(self._epoch_each))
 
         self._worklist.execute.insert(0, w)
 
@@ -103,7 +101,7 @@ class Main(object):
             for call in preparation:
                 call()
 
-        for i in range(self._steps // self.epoch_each):
+        for i in range(self.slots):
             for call in self._route:
                 call()
         return workupParser
@@ -141,7 +139,7 @@ class Main(object):
 
         return self
 
-    have_plot = False
+    _had_plot = False
 
     def plot_item(self, name):
         """ (optional) arg: var1|var2|... plotting images """
@@ -155,7 +153,7 @@ class Main(object):
 
                 self._worklist.execute.append(w)
 
-        if not self.have_plot:
+        if not self._had_plot:
             self._route.append(lambda: self._executor.tick())
             self._route.append(lambda: BroadcastSave())
         return self

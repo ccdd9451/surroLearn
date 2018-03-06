@@ -3,6 +3,7 @@
 
 import tensorflow as tf
 from . import data
+from functools import lru_cache
 
 
 class Constructor(object):
@@ -75,7 +76,7 @@ class Constructor(object):
             from .ops import L2
 
             def reg(w, _=None):
-                return sum(L2(w, scale))
+                return L2(w, scale)
 
             self.formulations["regularize"] = reg
 
@@ -102,15 +103,18 @@ class Constructor(object):
             self.formulations["rmse_loss"] = RMSE
         return self.formulations["rmse_loss"]
 
+    @lru_cache()
     def main_data_pipe(self):
         return data.Dataset.shuffle_batch(*self.devider.train[:0.75],
                                           self.shuffle_batch_size)
 
+    @lru_cache()
     def cross_vaild_pipe(self):
-        return self.devider.train[0.75:]
+        return data.Dataset.static_tensor(*self.devider.train[0.75:])
 
+    @lru_cache()
     def test_pipe(self):
-        return self.devider.test.all()
+        return data.Dataset.static_tensor(*self.devider.test.all())
 
     def training_bake(self):
 
@@ -127,10 +131,16 @@ class Constructor(object):
                 others.append(o)
 
         # Send all data into tensors
-        ti, tr = self.main_data_pipe()
+        _, _ = self.main_data_pipe()
         _, _ = self.cross_vaild_pipe()
         _, _ = self.test_pipe()
-
+        pipe = tf.constant("train", name="pipe")
+        compare = {
+            tf.equal(pipe, "train"): self.main_data_pipe,
+            tf.equal(pipe, "cross_valid"): self.cross_vaild_pipe,
+            tf.equal(pipe, "test"): self.test_pipe,
+        }
+        ti, tr = tf.case(compare)
         ti = tf.identity(ti, name="inputs")
         tr = tf.identity(tr, name="references")
         self.graph = self.graphGen(ti, tr, trainable_collect)

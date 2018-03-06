@@ -51,6 +51,7 @@ class Executor(object):
         self.ref_rmse = self._graph.get_tensor_by_name("ref_rmse:0")
         self.inputs = self._graph.get_tensor_by_name("inputs:0")
         self.outputs = self._graph.get_tensor_by_name("outputs:0")
+        self.pipe = self._graph.get_tensor_by_name("pipe:0")
 
         self.evaluate_only = evaluate_only
         if not evaluate_only:
@@ -74,10 +75,13 @@ class Executor(object):
             raise UnableToTrainError("Attempt to run training process on a "
                                      "evaluating model.")
         self._sess.run(self.epoch_init)
+        sample = {
+            self.pipe: "train",
+        }
         for i in range(epochs):
             try:
                 while True:
-                    rmse, _ = self._sess.run([self.ref_rmse, self.train_op])
+                    rmse, _ = self._sess.run([self.ref_rmse, self.train_op], feed_dict=sample)
             except tf.errors.OutOfRangeError:
                 self._sess.run(self.epoch_init)
                 self._sess.run(self._global_step_inc)
@@ -86,10 +90,9 @@ class Executor(object):
         global_step = self._sess.run(self._global_step)
         print(datetime.now(), "Training on step ", global_step, " finished.")
 
-    def evaluate(self, inputs, reference, cls):
+    def evaluate(self, cls):
         sample = {
-            self.inputs: inputs,
-            self.reference: reference,
+            self.pipe: cls,
         }
 
         rmse = self._sess.run(self.ref_rmse, feed_dict=sample)
