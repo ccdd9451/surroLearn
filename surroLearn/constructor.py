@@ -127,10 +127,16 @@ class Constructor(object):
                 others.append(o)
 
         # Send all data into tensors
-        ti, tr = self.main_data_pipe()
+        _, _ = self.main_data_pipe()
         _, _ = self.cross_vaild_pipe()
         _, _ = self.test_pipe()
-
+        pipe = tf.constant("train", name="pipe")
+        compare = {
+            tf.equal(pipe, "train"): self.main_data_pipe,
+            tf.equal(pipe, "cross_valid"): self.cross_vaild_pipe,
+            tf.equal(pipe, "test"): self.test_pipe,
+        }
+        ti, tr = tf.case(compare)
         ti = tf.identity(ti, name="inputs")
         tr = tf.identity(tr, name="references")
         self.graph = self.graphGen(ti, tr, trainable_collect)
