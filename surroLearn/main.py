@@ -18,13 +18,15 @@ os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
 Worklist = namedtuple("Worklist", ["inputs", "construct", "execute"])
 
+
 class Main(object):
-    def __init__(self, save_dir=".", slots=100):
+    def __init__(self, save_dir=".", slots=100, batch_size=256):
         global path
         path = Path(save_dir).expanduser()
         path.mkdir(parents=True, exist_ok=True)
         self.save_dir = str(path)
         self.slots = slots
+        self.batch_size = batch_size
 
         self._worklist = Worklist._make([[], [], []])
         self._route = []
@@ -59,7 +61,12 @@ class Main(object):
 
         def w():
             m = stack_max_out(1000, 10, 6)
-            self._constructor = Constructor(m, self._inputs, self._references)
+            self._constructor = Constructor(
+                m,
+                self._inputs,
+                self._references,
+                shuffle_batch_size=self.batch_size,
+            )
 
         self._worklist.construct.insert(0, w)
 
@@ -83,10 +90,11 @@ class Main(object):
             config = tf.ConfigProto()
             config.graph_options.optimizer_options.global_jit_level = tf.OptimizerOptions.ON_1
 
-            self._executor = Executor(tf.Session(config=config),
-                                      self._constructor.training_bake(),
-                                      self._constructor.save_list,
-                                      self.save_dir)
+            self._executor = Executor(
+                tf.Session(config=config),
+                self._constructor.training_bake(),
+                self._constructor.save_list,
+                self.save_dir)
             self._route.insert(0, lambda: self._executor.evaluate("test"))
             self._route.insert(0,
                                lambda: self._executor.evaluate("cross_valid"))
