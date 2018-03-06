@@ -131,6 +131,16 @@ class Main(object):
 
         return self
 
+    def lambda_static(self, lr):
+        """ (optional) arg: [lrL, lrR] linear increasing lambda """
+
+        def w():
+            self._constructor.regularize_formulate(lr)
+
+        self._worklist.construct.append(w)
+
+        return self
+
     have_plot = False
 
     def plot_item(self, name):

@@ -75,7 +75,7 @@ class Constructor(object):
             from .ops import L2
 
             def reg(w, _=None):
-                return sum(L2(w, scale))
+                return L2(w, scale)
 
             self.formulations["regularize"] = reg
 

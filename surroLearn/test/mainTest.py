@@ -38,10 +38,15 @@ class MainTest(tf.test.TestCase):
                            "plot_item lambda_scale "
                            "lambda_inc (0,0.1) train")
 
-    def test_MainStream_l2_exp_inc(self):
+    def test_MainStream_l2_inc(self):
         self._fakeDataTest("learn cfile {} steps 1000 "
                            "stack_maxout smpl_train "
                            "lambda_inc (0,0.01) train")
+
+    def test_MainStream_l2_static(self):
+        self._fakeDataTest("learn cfile {} steps 1000 "
+                           "stack_maxout smpl_train "
+                           "lambda_static 0.1 train")
 
     def test_L2_graph_export(self):
         self._fakeDataTest("learn cfile {} steps 1000 "
