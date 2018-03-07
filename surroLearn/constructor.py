@@ -26,7 +26,7 @@ class Constructor(object):
                  graphGen,
                  inputs,
                  references,
-                 shuffle_batch_size=256,
+                 shuffle_batch_size=1024,
                  learning_rate=0.001,
                  random_seed=None):
         """
