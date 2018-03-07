@@ -18,12 +18,12 @@ sys.stdout = open(os.devnull, 'w')
 
 
 class MainTest(tf.test.TestCase):
-    def _fakeDataTest(self, command):
+    def _fakeDataTest(self, command, size=500):
         with TemporaryDirectory() as tdname:
             tempdata = Path(tdname) / "data"
             tempdata = str(tempdata)
-            inputs = np.random.randn(500, 10)
-            references = np.random.randn(500)
+            inputs = np.random.randn(size, 10)
+            references = np.random.randn(size)
             with open(tempdata, "wb") as f:
                 pickle.dump({
                     "X": inputs,
@@ -62,6 +62,12 @@ class MainTest(tf.test.TestCase):
                            "--slots=5 cfile {} steps 10 "
                            "stack_maxout smpl_train "
                            "timeit train")
+
+    def test_Simplest_Datasize(self):
+        self._fakeDataTest("learn --save_dir=.pytest_cache/st "
+                           "--slots=5 cfile {} steps 10 "
+                           "stack_maxout smpl_train datasize 500"
+                           "timeit train", size=5000)
 
     def test_L2_graph_export(self):
         self._fakeDataTest("learn --save_dir=.pytest_cache/lge "

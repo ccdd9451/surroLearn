@@ -18,8 +18,9 @@ os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
 Worklist = namedtuple("Worklist", ["inputs", "construct", "execute"])
 
+
 class Main(object):
-    def __init__(self, save_dir=".", slots=100):
+    def __init__(self, save_dir=".", slots=200):
         global path
         path = Path(save_dir).expanduser()
         path.mkdir(parents=True, exist_ok=True)
@@ -28,6 +29,7 @@ class Main(object):
 
         self._worklist = Worklist._make([[], [], []])
         self._route = []
+        self._data_size = None
 
         Recorder().clear()
         PlotsClear()
@@ -43,12 +45,18 @@ class Main(object):
 
         return self
 
+    def datasize(self, size):
+        self._data_size = size
+        return self
+
     def cfile(self, filename):
         """ arg: filename  dataset from compatible_load """
 
         def w():
             from .data import compatible_load
-            self._inputs, self._references = compatible_load(filename)
+            inp, ref = compatible_load(filename)
+            self._inputs = inp[:self._data_size]
+            self._references = ref[:self._data_size]
 
         self._worklist.inputs.append(w)
 
@@ -59,6 +67,17 @@ class Main(object):
 
         def w():
             m = stack_max_out(1000, 10, 6)
+            self._constructor = Constructor(m, self._inputs, self._references)
+
+        self._worklist.construct.insert(0, w)
+
+        return self
+
+    def stack_maxout_conf(self, configs):
+        """ default maxout graph """
+
+        def w():
+            m = stack_max_out(*configs)
             self._constructor = Constructor(m, self._inputs, self._references)
 
         self._worklist.construct.insert(0, w)
@@ -83,10 +102,11 @@ class Main(object):
             config = tf.ConfigProto()
             config.graph_options.optimizer_options.global_jit_level = tf.OptimizerOptions.ON_1
 
-            self._executor = Executor(tf.Session(config=config),
-                                      self._constructor.training_bake(),
-                                      self._constructor.save_list,
-                                      self.save_dir)
+            self._executor = Executor(
+                tf.Session(config=config),
+                self._constructor.training_bake(),
+                self._constructor.save_list,
+                self.save_dir)
             self._route.insert(0, lambda: self._executor.evaluate("test"))
             self._route.insert(0,
                                lambda: self._executor.evaluate("cross_valid"))
