@@ -125,16 +125,20 @@ class Main(object):
 
     def train(self):
         """ last training command, workup arguments will follow """
-        for name, preparation in self._worklist._asdict().items():
-            if len(preparation) == 0:
-                raise
-            for call in preparation:
-                call()
+        try:
+            for name, preparation in self._worklist._asdict().items():
+                if len(preparation) == 0:
+                    raise
+                for call in preparation:
+                    call()
 
-        for i in range(self.slots):
-            for call in self._route:
-                call()
-        return workupParser
+            for i in range(self.slots):
+                for call in self._route:
+                    call()
+        except KeyboardInterrupt as e:
+            print(e)
+        finally:
+            return workupParser
 
     def ptrain(self):
         """ last training command, workup arguments will follow """
