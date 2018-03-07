@@ -16,6 +16,7 @@ _plots = []
 _last_thread = None
 recorder = Recorder()
 
+
 def run_in_thread(fn):
     def run(*k, **kw):
         global _last_thread
@@ -49,17 +50,19 @@ class Plot(object):
         _plots.append(self)
 
     def save(self):
+        dirty = False
         for var in self._vars:
-            self.add_line(*recorder.serialize(var), label=var)
-        self._ax.legend()
-        self._fig.savefig(self._fname)
-        self._fig.clear()
-        self._ax = self._fig.subplots(1)
+            data = recorder.serialize(var)
+            if data:
+                self.add_line(*data, label=var)
+                dirty = True
+        if dirty:
+            self._ax.legend()
+            self._fig.savefig(self._fname)
+            self._fig.clear()
+            self._ax = self._fig.subplots(1)
 
     def add_line(self, x, y, **kwargs):
         if not kwargs.get("label"):
             kwargs["label"] = self._name
         self._ax.plot(x, y, **kwargs)
-
-
-

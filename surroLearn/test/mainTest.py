@@ -66,7 +66,7 @@ class MainTest(tf.test.TestCase):
     def test_Simplest_Datasize(self):
         self._fakeDataTest("learn --save_dir=.pytest_cache/st "
                            "--slots=5 cfile {} steps 10 "
-                           "stack_maxout smpl_train datasize 500"
+                           "stack_maxout smpl_train datasize 500 "
                            "timeit train", size=5000)
 
     def test_L2_graph_export(self):
