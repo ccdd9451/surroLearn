@@ -79,7 +79,11 @@ class Main(object):
         """ basic training process with three pipes tested """
 
         def w():
-            self._executor = Executor(tf.Session(),
+
+            config = tf.ConfigProto()
+            config.graph_options.optimizer_options.global_jit_level = tf.OptimizerOptions.ON_1
+
+            self._executor = Executor(tf.Session(config=config),
                                       self._constructor.training_bake(),
                                       self._constructor.save_list,
                                       self.save_dir)
@@ -104,6 +108,22 @@ class Main(object):
         for i in range(self.slots):
             for call in self._route:
                 call()
+        return workupParser
+
+    def ptrain(self):
+        """ last training command, workup arguments will follow """
+        for name, preparation in self._worklist._asdict().items():
+            if len(preparation) == 0:
+                raise
+            for call in preparation:
+                call()
+
+        import profile
+        profile.runctx("""
+for i in range(self.slots):
+    for call in self._route:
+        call()
+        """, globals(), locals())
         return workupParser
 
     def timeit(self):
