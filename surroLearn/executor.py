@@ -127,7 +127,7 @@ class Executor(object):
         if not os.path.exists(self._save_dir):
             os.makedirs(self._save_dir)
         self._saver.save(
-            self._sess, self._save_dir, _global_step=self._global_step)
+            self._sess, self._save_dir, global_step=self._global_step)
 
     def load_model(self):
         ckpt = tf.train.latest_checkpoint(self._save_dir)

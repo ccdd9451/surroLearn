@@ -100,6 +100,20 @@ class Main(object):
 
         return self
 
+    def save_at_min(self, cls):
+        """ save model when current tick is min of the history """
+
+        def w():
+            def r():
+                if Recorder().ismin(cls):
+                    self._executor.save_model()
+
+            self._route.append(r)
+
+        self._worklist.execute.append(w)
+
+        return self
+
     def smpl_train(self):
         """ basic training process with three pipes tested """
 
@@ -138,6 +152,8 @@ class Main(object):
         except KeyboardInterrupt as e:
             print(e)
         finally:
+            self._executor.save_model()
+
             return workupParser
 
     def ptrain(self):

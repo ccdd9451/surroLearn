@@ -38,3 +38,7 @@ class Recorder(defaultdict, metaclass=Singleton):
     def valueByArg(self, cls, arg):
         filted = filter(lambda x: x[0] == arg, self[cls])
         return list(filted)[0][1]
+
+    def ismin(self, cls):
+        query = self[cls]
+        return query[-1] == min(query)
