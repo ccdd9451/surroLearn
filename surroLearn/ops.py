@@ -4,7 +4,7 @@
 import tensorflow as tf
 
 
-def Classed_RMSE(prediction, reference, *_):
+def RMSE(prediction, reference, *_):
     """
     Args:
 
@@ -20,15 +20,9 @@ def Classed_RMSE(prediction, reference, *_):
     """
 
     diff = tf.squared_difference(prediction, reference)
-    diff = tf.reduce_mean(diff, axis=1)
-    ref_rmse = tf.sqrt(diff)
-
-    return ref_rmse
-
-def RMSE(prediction, reference, *_):
-    diff = tf.squared_difference(prediction, reference)
     diff = tf.reduce_mean(diff)
     ref_rmse = tf.sqrt(diff)
+    ref_rmse = tf.identity(ref_rmse, name="ref_rmse")
 
     return ref_rmse
 
@@ -49,6 +43,6 @@ def L2(weights, scale):
     weights = map(tf.square, weights)
     weights = map(tf.reduce_sum, weights)
     weights = sum(weights)
-    losses =  weights * scale
+    losses = weights * scale
 
     return losses

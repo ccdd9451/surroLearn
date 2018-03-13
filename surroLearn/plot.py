@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # encoding: utf-8
 
+# pylint: disable=all
 import threading
 import matplotlib as mpl
 mpl.use('Agg')
@@ -10,6 +11,7 @@ plt.ioff()
 from .recorder import Recorder
 from pathlib import Path
 from matplotlib import style
+# pylint: enable=all
 
 style.use("ggplot")
 _plots = []

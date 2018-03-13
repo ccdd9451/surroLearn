@@ -2,6 +2,7 @@
 # encoding: utf-8
 
 import time
+import threading
 import tensorflow as tf
 
 from datetime import datetime
@@ -51,3 +52,11 @@ def tensor_linear_interval_range(begin, end, step_amount):
 
 def nilfunc(*argv):
     pass
+
+
+def run_in_thread(fn):
+    def run(*k, **kw):
+        _last_thread = threading.Thread(target=fn, args=k, kwargs=kw)
+        _last_thread.start()
+
+    return run

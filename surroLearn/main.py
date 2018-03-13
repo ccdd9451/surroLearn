@@ -10,6 +10,7 @@ from . import workup
 from .constructor import Constructor
 from .executor import Executor
 from .maxout import stack_max_out
+from .fullyConnected import stack_fc
 from .utils import Time, export_graph
 from .plot import Plot, BroadcastSave, PlotsClear
 from .recorder import Recorder
@@ -84,6 +85,17 @@ class Main(object):
 
         def w():
             m = stack_max_out(*configs)
+            self._constructor = Constructor(m, self._inputs, self._references)
+
+        self._worklist.construct.insert(0, w)
+
+        return self
+
+    def stack_fully_connected(self, activation_fn, configs):
+        """ args: fn_name, (hidden_num,layer_num) fully connected graph """
+
+        def w():
+            m = stack_fc(*configs)
             self._constructor = Constructor(m, self._inputs, self._references)
 
         self._worklist.construct.insert(0, w)
@@ -200,6 +212,18 @@ for i in range(self.slots):
 
         def w():
             self._constructor.regularize_formulate(lr)
+
+        self._worklist.construct.append(w)
+
+        return self
+
+    def classed_rmse(self, reg):
+        """ (optional) arg: list of regularizer generate multiple rmses"""
+
+        def w():
+            from .formulations import classed_rmse
+            self._constructor.rmse_loss_formulate(
+                classed_rmse(reg))
 
         self._worklist.construct.append(w)
 

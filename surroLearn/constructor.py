@@ -154,8 +154,6 @@ class Constructor(object):
             weights_loss = self.regularize_formulate()(weights)
             tot_loss = ref_rmse + weights_loss
 
-            ref_rmse = tf.identity(ref_rmse, name="ref_rmse")
-
             optimizer = tf.train.AdamOptimizer(self.learning_rate)
             optimizer.minimize(tot_loss, name="train_op")
 

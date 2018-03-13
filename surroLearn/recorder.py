@@ -27,7 +27,18 @@ class Recorder(defaultdict, metaclass=Singleton):
         self[cls].append([time, value])
 
     def serialize(self, cls):
-        return list(map(list, zip(*self[cls])))
+        if not self[cls]:
+            return None
+        elif isinstance(self[cls][1], float):
+            return list(zip(*self[cls]))
+        else:
+            time, data = list(zip(*self[cls]))
+            timeCum = []
+            dataCum = []
+            for data in zip(*data):
+                timeCum.extend(time)
+                dataCum.extend(data)
+            return timeCum, dataCum
 
     def find(self, func, cls):
         return func(
