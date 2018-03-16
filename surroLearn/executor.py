@@ -110,6 +110,7 @@ class Executor(object):
         self._tick_list.append([var, func])
 
     def tick(self, update=True, **kwargs):
+        import sys
         for var, func in self._tick_list:
             if not update:
                 func(*self.rmse_hist.serialize(var), **kwargs)

@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # encoding: utf-8
 
-from collections import defaultdict
+from collections import defaultdict, Iterable
 
 
 class Singleton(type):
@@ -27,18 +27,18 @@ class Recorder(defaultdict, metaclass=Singleton):
         self[cls].append([time, value])
 
     def serialize(self, cls):
+        time, data = list(zip(*self[cls]))
         if not self[cls]:
             return None
-        elif isinstance(self[cls][1], float):
-            return list(zip(*self[cls]))
-        else:
-            time, data = list(zip(*self[cls]))
+        if isinstance(data[0], Iterable):
             timeCum = []
             dataCum = []
             for data in zip(*data):
                 timeCum.extend(time)
                 dataCum.extend(data)
             return timeCum, dataCum
+        else:
+            return [time, data]
 
     def find(self, func, cls):
         return func(

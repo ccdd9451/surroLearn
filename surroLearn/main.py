@@ -2,6 +2,7 @@
 # encoding: utf-8
 
 import os
+import sys
 import tensorflow as tf
 
 from collections import namedtuple
@@ -95,7 +96,7 @@ class Main(object):
         """ args: fn_name, (hidden_num,layer_num) fully connected graph """
 
         def w():
-            m = stack_fc(*configs)
+            m = stack_fc(activation_fn, *configs)
             self._constructor = Constructor(m, self._inputs, self._references)
 
         self._worklist.construct.insert(0, w)
@@ -151,13 +152,13 @@ class Main(object):
 
     def train(self):
         """ last training command, workup arguments will follow """
-        try:
-            for name, preparation in self._worklist._asdict().items():
-                if len(preparation) == 0:
-                    raise
-                for call in preparation:
-                    call()
+        for name, preparation in self._worklist._asdict().items():
+            if len(preparation) == 0:
+                raise
+            for call in preparation:
+                call()
 
+        try:
             for i in range(self.slots):
                 for call in self._route:
                     call()
@@ -165,7 +166,6 @@ class Main(object):
             print(e)
         finally:
             self._executor.save_model()
-
             return workupParser
 
     def ptrain(self):
@@ -222,8 +222,7 @@ for i in range(self.slots):
 
         def w():
             from .formulations import classed_rmse
-            self._constructor.rmse_loss_formulate(
-                classed_rmse(reg))
+            self._constructor.rmse_loss_formulate(classed_rmse(reg))
 
         self._worklist.construct.append(w)
 
@@ -246,6 +245,8 @@ for i in range(self.slots):
         if not self._had_plot:
             self._route.append(lambda: self._executor.tick())
             self._route.append(lambda: BroadcastSave())
+            self._had_plot = True
+
         return self
 
     def ls(self):

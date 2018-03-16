@@ -17,7 +17,7 @@ def max_out(inputs, num_units):
                              num_channels, num_units))
     shape[-1] = num_units
     shape += [num_channels // num_units]
-    outputs = tf.reduce_max(tf.reshape(inputs, shape), -1, keep_dims=False)
+    outputs = tf.reduce_max(tf.reshape(inputs, shape), -1, keepdims=False)
     return outputs
 
 

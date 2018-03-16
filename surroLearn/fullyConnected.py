@@ -78,7 +78,7 @@ def stack_fc(activation_fn, num_hidden, num_level, num_outputs=None):
         "lrelu": tf.nn.leaky_relu,
         "relu": tf.nn.relu,
     }
-    activation_fn = afns[activation_fn.lower()]
+    activation_fn_layer = afns[activation_fn.lower()]
 
     def graphGen(inputs, references, trainable_collect):
         nonlocal num_outputs
@@ -92,7 +92,7 @@ def stack_fc(activation_fn, num_hidden, num_level, num_outputs=None):
                 num_outputs=num_outputs,
                 num_level=num_level,
                 trainable_collect=trainable_collect,
-                activation_fn=afns,
+                activation_fn=activation_fn_layer,
             )
         return graph
 

@@ -1,8 +1,12 @@
 #!/usr/bin/env python
 # encoding: utf-8
 
+import os
+import sys
 import tensorflow as tf
 import surroLearn as sl
+
+sys.stdout = open(os.devnull, 'w')
 
 
 class MaxoutTest(tf.test.TestCase):
@@ -48,7 +52,7 @@ class FullyConnectTest(tf.test.TestCase):
 
             outputs = sl.fullyConnected._stack_fc(
                 inputs=inputs,
-                num_cells=100,
+                num_hidden=100,
                 num_outputs=4,
                 num_level=6,
                 activation_fn=tf.nn.relu,

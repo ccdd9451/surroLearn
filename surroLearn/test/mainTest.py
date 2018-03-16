@@ -53,7 +53,7 @@ class MainTest(tf.test.TestCase):
     def test_Fully_Connected(self):
         self._fakeDataTest("learn --save_dir=.pytest_cache/li "
                            "--slots=10 cfile {} steps 10 "
-                           "stack_fc relu (100,2) smpl_train "
+                           "stack_fully_connected relu (100,2) smpl_train "
                            "plot_item train|cross_valid|test "
                            "train")
 
