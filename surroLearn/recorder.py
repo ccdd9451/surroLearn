@@ -39,7 +39,7 @@ class Recorder(defaultdict, metaclass=Singleton):
     def find(self, func, cls):
         return func(
             self[cls],
-            key=lambda x: x[1],
+            key=lambda x: np.array(x[1]).sum(),  # summing for multi-var argument
         )
 
     def valueByArg(self, cls, arg):
@@ -49,3 +49,8 @@ class Recorder(defaultdict, metaclass=Singleton):
     def ismin(self, cls):
         query = self[cls]
         return query[-1] == min(query)
+
+    def dump(self, path):
+        import pickle
+        with open(path, "wb") as f:
+            pickle.dump(self, f)

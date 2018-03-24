@@ -20,7 +20,6 @@ def linear_regularizer(lr1, lr2, steps):
 
 
 def classed_rmse(regularizer):
-
     def Classed_RMSE(prediction, reference, *_):
         """
         Args:
@@ -39,7 +38,7 @@ def classed_rmse(regularizer):
         diff = tf.squared_difference(prediction, reference)
         diff = tf.reduce_mean(diff, axis=0)
         ref_rmse = tf.sqrt(diff)
-        ref_rmse = tf.identity(ref_rmse, name="ref_rmse")
+        tf.identity(ref_rmse, name="ref_rmse")
         reg = tf.constant(regularizer, dtype=tf.float32)
         reg_rmse = tf.div(ref_rmse, reg)
         reg_rmse_sum = tf.reduce_sum(reg_rmse)

@@ -119,6 +119,15 @@ class MainTest(tf.test.TestCase):
                            "find,min,cross_valid|argvar,train "
                            "find,min,cross_valid|argvar,test")
 
+    def test_dump_test(self):
+        self._fakeDataTest("learn --save_dir=.pytest_cache/dp "
+                           "--slots=5 cfile {} steps 10 "
+                           "stack_maxout "
+                           "plot_item train|cross_valid|test "
+                           "plot_item lambda_scale "
+                           "lambda_inc (0,0.1) train "
+                           "dump,record.pkl")
+
     def test_CLI_ls(self):
         testargs = ["learn", "ls"]
         with patch.object(sys, 'argv', testargs):

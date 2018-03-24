@@ -15,4 +15,8 @@ def argvar(var, arg, value):
     return arg, value, recorder.valueByArg(var, arg)
 
 
+def dump(path):
+    recorder.dump(path)
+
+
 lines = []
