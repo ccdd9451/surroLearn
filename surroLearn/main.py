@@ -36,7 +36,7 @@ class Main(object):
         self._data_size = None
 
         global lines
-        del(lines[:])
+        del (lines[:])
         Recorder().clear()
         Recorder().path = str(path / "record.pkl")
         PlotsClear()
@@ -197,8 +197,16 @@ for i in range(self.slots):
 
         def w():
             t = Time(self.slots)
-            self._route.append(
-                lambda: print("Esitmate time finishing", t.tick()))
+
+            def f():
+                with open(str(path/"time.out"), "w") as f:
+                    print(
+                        "Esitmate time finishing",
+                        t.tick(),
+                        file=f,
+                    )
+
+            self._route.append(f)
 
         self._worklist.execute.append(w)
         return self

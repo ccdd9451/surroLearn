@@ -77,7 +77,7 @@ class MainTest(tf.test.TestCase):
 
     @unittest.skip("Unknown error, repair it later")
     def test_Fully_Connected(self):
-        self._fakeDataTest("learn --save_dir=.pytest_cache/li "
+        self._fakeDataTest("learn --save_dir=.pytest_cache/fc "
                            "--slots=10 cfile {} steps 10 "
                            "stack_fully_connected relu (100,2) "
                            "plot_item train|cross_valid|test "
@@ -98,7 +98,7 @@ class MainTest(tf.test.TestCase):
 
     def test_Simplest_Datasize(self):
         self._fakeDataTest(
-            "learn --save_dir=.pytest_cache/st "
+            "learn --save_dir=.pytest_cache/sd "
             "--slots=5 cfile {} steps 10 "
             "stack_maxout datasize 500 "
             "timeit train",
