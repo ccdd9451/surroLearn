@@ -19,6 +19,7 @@ from .recorder import Recorder
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
 Worklist = namedtuple("Worklist", ["inputs", "construct", "execute"])
+lines = []
 
 
 class Main(object):
@@ -34,7 +35,10 @@ class Main(object):
         self._route = []
         self._data_size = None
 
+        global lines
+        del(lines[:])
         Recorder().clear()
+        Recorder().path = str(path / "record.pkl")
         PlotsClear()
 
     def steps(self, steps):
@@ -152,7 +156,8 @@ class Main(object):
 
     def train(self):
         """ last training command, workup arguments will follow """
-        self._worklist.construct.append(lambda: self._constructor.training_bake())
+        self._worklist.construct.append(
+            lambda: self._constructor.training_bake())
         self.__smpl_train()
 
         for name, preparation in self._worklist._asdict().items():
@@ -170,7 +175,6 @@ class Main(object):
 
         self._executor.save_model()
         return workupParser
-
 
     def ptrain(self):
         """ last training command, workup arguments will follow """
@@ -253,6 +257,11 @@ for i in range(self.slots):
 
         return self
 
+    def plot_ctt(self):
+        """ shortcut for plot_item "train|test|cross_valid" """
+        self.plot_item("train|test|cross_valid")
+        return self
+
     def ls(self):
         """ this help command """
         lines = []
@@ -269,12 +278,10 @@ for i in range(self.slots):
         print("\n".join(lines))
 
 
-lines = []
-
-
 def workupParser(pipe=None):
     if not pipe:
         if lines:
+            lines.append("")
             filename = str(path / "workups")
             with open(filename, "w") as f:
                 f.write("\n".join(lines))

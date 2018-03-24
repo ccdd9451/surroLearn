@@ -15,8 +15,14 @@ class Singleton(type):
         return cls._instances[cls]
 
 
+# Rapid key for comparing records
+def _recKey(x):
+    return np.array(x[1]).sum()
+
+
 class Recorder(defaultdict, metaclass=Singleton):
     timer = None
+    path = "record.pkl"
 
     def __init__(self):
         super(Recorder, self).__init__(list)
@@ -39,7 +45,7 @@ class Recorder(defaultdict, metaclass=Singleton):
     def find(self, func, cls):
         return func(
             self[cls],
-            key=lambda x: np.array(x[1]).sum(),  # summing for multi-var argument
+            key=_recKey,  # summing for multi-var argument
         )
 
     def valueByArg(self, cls, arg):
@@ -48,9 +54,9 @@ class Recorder(defaultdict, metaclass=Singleton):
 
     def ismin(self, cls):
         query = self[cls]
-        return query[-1] == min(query)
+        return query[-1] == min(query, key=_recKey)
 
-    def dump(self, path):
+    def dump(self):
         import pickle
-        with open(path, "wb") as f:
+        with open(self.path, "wb") as f:
             pickle.dump(self, f)

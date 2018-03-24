@@ -37,7 +37,7 @@ class Executor(object):
         self._sess = sess
         self._graph = graph
         self._save_list = save_list
-        self._save_dir = save_dir
+        self._save_dir = save_dir + "/exec_save"
 
         self._saver = tf.train.Saver(save_list)
 
@@ -111,7 +111,6 @@ class Executor(object):
         self._tick_list.append([var, func])
 
     def tick(self, update=True, **kwargs):
-        import sys
         for var, func in self._tick_list:
             if not update:
                 func(*self.rmse_hist.serialize(var), **kwargs)
@@ -130,8 +129,9 @@ class Executor(object):
             os.makedirs(self._save_dir)
         self._saver.save(
             self._sess,
-            self._save_dir + "/model",
-            global_step=self._global_step)
+            self._save_dir + "/saved",
+            global_step=self._global_step,
+        )
 
     def load_model(self):
         ckpt = tf.train.latest_checkpoint(self._save_dir)

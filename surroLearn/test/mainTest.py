@@ -62,9 +62,10 @@ class MainTest(tf.test.TestCase):
                                      "--save_dir=.pytest_cache/mc "
                                      "--slots=5 cfile {} steps 10 "
                                      "stack_maxout classed_rmse (1,1,1) "
-                                     "plot_item train|cross_valid|test "
-                                     "plot_item lambda_scale "
-                                     "lambda_inc (0,0.1) train")
+                                     "plot_ctt plot_item lambda_scale "
+                                     "lambda_inc (0,0.1) train "
+                                     "find,min,cross_valid|argvar,train "
+                                     )
 
     @unittest.skip("same func in test_Workup_Performance")
     def test_MainStream_l2_inc(self):
@@ -126,7 +127,7 @@ class MainTest(tf.test.TestCase):
                            "plot_item train|cross_valid|test "
                            "plot_item lambda_scale "
                            "lambda_inc (0,0.1) train "
-                           "dump,record.pkl")
+                           "dump")
 
     def test_CLI_ls(self):
         testargs = ["learn", "ls"]

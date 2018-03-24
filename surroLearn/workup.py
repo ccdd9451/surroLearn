@@ -1,10 +1,11 @@
 #!/usr/bin/env python
 # encoding: utf-8
 
+import numpy as np
 from .recorder import Recorder
 
+np.set_printoptions(precision=4, suppress=True)
 recorder = Recorder()
-
 
 def find(method, var):
     method = eval(method)
@@ -12,11 +13,11 @@ def find(method, var):
 
 
 def argvar(var, arg, value):
-    return arg, value, recorder.valueByArg(var, arg)
+    return arg, str(value), str(recorder.valueByArg(var, arg))
 
 
-def dump(path):
-    recorder.dump(path)
-
+def dump():
+    recorder.dump()
+    return recorder.path
 
 lines = []
