@@ -81,7 +81,8 @@ class Executor(object):
         for i in range(epochs):
             try:
                 while True:
-                    rmse, _ = self._sess.run([self.ref_rmse, self.train_op], feed_dict=sample)
+                    rmse, _ = self._sess.run(
+                        [self.ref_rmse, self.train_op], feed_dict=sample)
             except tf.errors.OutOfRangeError:
                 self._sess.run(self.epoch_init)
                 self._sess.run(self._global_step_inc)
@@ -128,7 +129,9 @@ class Executor(object):
         if not os.path.exists(self._save_dir):
             os.makedirs(self._save_dir)
         self._saver.save(
-            self._sess, self._save_dir, global_step=self._global_step)
+            self._sess,
+            self._save_dir + "/model",
+            global_step=self._global_step)
 
     def load_model(self):
         ckpt = tf.train.latest_checkpoint(self._save_dir)

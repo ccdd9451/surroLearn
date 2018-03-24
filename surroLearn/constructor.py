@@ -136,11 +136,11 @@ class Constructor(object):
         _, _ = self.test_pipe()
         pipe = tf.constant("train", name="pipe")
         compare = {
+            tf.equal(pipe, "test"): self.test_pipe,
             tf.equal(pipe, "train"): self.main_data_pipe,
             tf.equal(pipe, "cross_valid"): self.cross_vaild_pipe,
-            tf.equal(pipe, "test"): self.test_pipe,
         }
-        ti, tr = tf.case(compare, exclusive=True)
+        ti, tr = tf.case(compare, exclusive=True, strict=True)
         ti = tf.identity(ti, name="inputs")
         tr = tf.identity(tr, name="references")
         self.graph = self.graphGen(ti, tr, trainable_collect)
@@ -165,4 +165,3 @@ class Constructor(object):
 
         self.save_list = weights + biases + others
 
-        return self.graph

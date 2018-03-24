@@ -127,7 +127,7 @@ class Main(object):
 
         return self
 
-    def smpl_train(self):
+    def __smpl_train(self):
         """ basic training process with three pipes tested """
 
         def w():
@@ -137,7 +137,7 @@ class Main(object):
 
             self._executor = Executor(
                 tf.Session(config=config),
-                self._constructor.training_bake(),
+                self._constructor.graph,
                 self._constructor.save_list,
                 self.save_dir)
             self._route.insert(0, lambda: self._executor.evaluate("test"))
@@ -152,6 +152,9 @@ class Main(object):
 
     def train(self):
         """ last training command, workup arguments will follow """
+        self._worklist.construct.append(lambda: self._constructor.training_bake())
+        self.__smpl_train()
+
         for name, preparation in self._worklist._asdict().items():
             if len(preparation) == 0:
                 raise
@@ -164,9 +167,10 @@ class Main(object):
                     call()
         except KeyboardInterrupt as e:
             print(e)
-        finally:
-            self._executor.save_model()
-            return workupParser
+
+        self._executor.save_model()
+        return workupParser
+
 
     def ptrain(self):
         """ last training command, workup arguments will follow """

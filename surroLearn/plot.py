@@ -30,7 +30,7 @@ def run_in_thread(fn):
     return run
 
 
-@run_in_thread
+# @run_in_thread
 def BroadcastSave():
     for p in _plots:
         p.save()

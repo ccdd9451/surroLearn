@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # encoding: utf-8
 
+import numpy as np
 from collections import defaultdict, Iterable
 
 
@@ -27,18 +28,13 @@ class Recorder(defaultdict, metaclass=Singleton):
         self[cls].append([time, value])
 
     def serialize(self, cls):
-        time, data = list(zip(*self[cls]))
         if not self[cls]:
             return None
-        if isinstance(data[0], Iterable):
-            timeCum = []
-            dataCum = []
-            for data in zip(*data):
-                timeCum.extend(time)
-                dataCum.extend(data)
-            return timeCum, dataCum
-        else:
-            return [time, data]
+        time, data = list(zip(*self[cls]))
+        time = np.array(time)
+        data = np.array(data)
+
+        return [time, data]
 
     def find(self, func, cls):
         return func(
