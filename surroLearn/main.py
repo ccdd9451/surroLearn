@@ -86,7 +86,7 @@ class Main(object):
         return self
 
     def stack_maxout_conf(self, configs):
-        """ default maxout graph """
+        """ (cell,unit,level) create a custom maxout graph """
 
         def w():
             m = stack_max_out(*configs)
