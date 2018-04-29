@@ -199,7 +199,7 @@ for i in range(self.slots):
             t = Time(self.slots)
 
             def f():
-                with open(str(path/"time.out"), "w") as f:
+                with open(str(path / "time.out"), "w") as f:
                     print(
                         "Esitmate time finishing",
                         t.tick(),
@@ -207,6 +207,15 @@ for i in range(self.slots):
                     )
 
             self._route.append(f)
+
+        self._worklist.execute.append(w)
+        return self
+
+    def restore_from(self, load_dir):
+        """ (optional arg: dir load model from certain dir) """
+
+        def w():
+            self._executor.load_model_from(load_dir)
 
         self._worklist.execute.append(w)
         return self
@@ -296,10 +305,13 @@ def workupParser(pipe=None):
         return
 
     result = []
-    for method in pipe.split("|"):
-        func, *argv = method.split(",")
-        result = getattr(workup, func)(*(argv + result))
-    lines.append(pipe + " => " + str(result))
+    try:
+        for method in pipe.split("|"):
+            func, *argv = method.split(",")
+            result = getattr(workup, func)(*(argv + result))
+        lines.append(pipe + " => " + str(result))
+    except IndexError as e:
+        print("IndexError:", e)
 
     return workupParser
 

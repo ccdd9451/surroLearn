@@ -143,6 +143,16 @@ class Executor(object):
             print(datetime.now(), ": [!] Loading checkpoints fail")
             return False
 
+    def load_model_from(self, load_dir):
+        ckpt = tf.train.latest_checkpoint(load_dir)
+        if ckpt:
+            print(datetime.now(), ": Loading checkpoints from ", ckpt)
+            self._saver.restore(self._sess, ckpt)
+            return True
+        else:
+            print(datetime.now(), ": [!] Loading checkpoints fail")
+            return False
+
 
 class UnableToTrainError(Exception):
     pass
