@@ -50,7 +50,7 @@ class MainTest(tf.test.TestCase):
 
     @unittest.skip("same func in test_Workup_Performance")
     def test_Plotting_Multis(self):
-        self._fakeDataTest("learn --save_dir=.pytest_cache/pm "
+        self._fakeDataTest("learn --save_dir=.pytest_cache/plot_multi "
                            "--slots=5 cfile {} steps 10 "
                            "stack_maxout "
                            "plot_item train|cross_valid|test "
@@ -59,7 +59,7 @@ class MainTest(tf.test.TestCase):
 
     def test_multiClass(self):
         self._fakeDataTestMulticlass("learn "
-                                     "--save_dir=.pytest_cache/mc "
+                                     "--save_dir=.pytest_cache/multi_class "
                                      "--slots=5 cfile {} steps 10 "
                                      "stack_maxout classed_rmse (1,1,1) "
                                      "plot_ctt plot_item lambda_scale "
@@ -69,49 +69,56 @@ class MainTest(tf.test.TestCase):
 
     @unittest.skip("same func in test_Workup_Performance")
     def test_MainStream_l2_inc(self):
-        self._fakeDataTest("learn --save_dir=.pytest_cache/li "
+        self._fakeDataTest("learn --save_dir=.pytest_cache/l2_inc "
                            "--slots=10 cfile {} steps 10 "
                            "stack_maxout "
                            "plot_item train|cross_valid|test "
                            "lambda_inc (0,0.01) train")
 
+    def test_func_save_at_min(self):
+        self._fakeDataTest("learn --save_dir=.pytest_cache/save_at_min "
+                           "--slots=10 cfile {} steps 10 "
+                           "stack_maxout save_at_min cross_valid "
+                           "plot_item train|cross_valid|test "
+                           "lambda_inc (0,0.01) train")
+
     @unittest.skip("Unknown error, repair it later")
     def test_Fully_Connected(self):
-        self._fakeDataTest("learn --save_dir=.pytest_cache/fc "
+        self._fakeDataTest("learn --save_dir=.pytest_cache/fully_conn "
                            "--slots=10 cfile {} steps 10 "
                            "stack_fully_connected relu (100,2) "
                            "plot_item train|cross_valid|test "
                            "train")
 
     def test_MainStream_l2_static(self):
-        self._fakeDataTest("learn --save_dir=.pytest_cache/ls "
+        self._fakeDataTest("learn --save_dir=.pytest_cache/l2_static "
                            "--slots=5 cfile {} steps 10 "
                            "stack_maxout "
                            "plot_item train|cross_valid|test "
                            "lambda_static 0.1 train")
 
     def test_Simplest_Timeit(self):
-        self._fakeDataTest("learn --save_dir=.pytest_cache/st "
+        self._fakeDataTest("learn --save_dir=.pytest_cache/timeit "
                            "--slots=5 cfile {} steps 10 "
                            "stack_maxout "
                            "timeit train")
 
     def test_Simplest_Datasize(self):
         self._fakeDataTest(
-            "learn --save_dir=.pytest_cache/sd "
+            "learn --save_dir=.pytest_cache/datasize "
             "--slots=5 cfile {} steps 10 "
             "stack_maxout datasize 500 "
             "timeit train",
             size=5000)
 
     def test_L2_graph_export(self):
-        self._fakeDataTest("learn --save_dir=.pytest_cache/lge "
+        self._fakeDataTest("learn --save_dir=.pytest_cache/graph "
                            "--slots=5 cfile {} steps 10 "
                            "stack_maxout "
                            "lambda_inc (0,0.01) export_graph train")
 
     def test_Workup_Performance(self):
-        self._fakeDataTest("learn --save_dir=.pytest_cache/wp "
+        self._fakeDataTest("learn --save_dir=.pytest_cache/workup "
                            "--slots=5 cfile {} steps 10 "
                            "stack_maxout "
                            "plot_item train|cross_valid|test "
@@ -121,7 +128,7 @@ class MainTest(tf.test.TestCase):
                            "find,min,cross_valid|argvar,test")
 
     def test_dump_test(self):
-        self._fakeDataTest("learn --save_dir=.pytest_cache/dp "
+        self._fakeDataTest("learn --save_dir=.pytest_cache/dump "
                            "--slots=5 cfile {} steps 10 "
                            "stack_maxout "
                            "plot_item train|cross_valid|test "
