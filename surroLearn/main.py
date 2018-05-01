@@ -70,7 +70,7 @@ class Main(object):
         return self
 
     def stack_maxout(self):
-        """ default maxout graph """
+        """ (1000, 10, 6) default maxout graph """
 
         def w():
             m = stack_max_out(1000, 10, 6)
