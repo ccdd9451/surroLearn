@@ -56,6 +56,10 @@ class Constructor(object):
         self.shuffle_batch_size = shuffle_batch_size
         self.devider = data.Devider(inputs, references, seed=random_seed)
 
+        # Used for gradient optimization
+        self._opt_batch_size = None
+        self._opt_vars = None
+
     def regularize_formulate(self, scale=None):
         """
         Args:
@@ -116,6 +120,18 @@ class Constructor(object):
     def test_pipe(self):
         return data.Dataset.static_tensor(*self.devider.test.all())
 
+    @lru_cache()
+    def opt_pipe_set(self, batch_size):
+        self._opt_batch_size = batch_size
+        return data.Dataset.restricted_opt_container(*self.devider.train.all(),
+                                                     batch_size)
+
+    def opt_pipe(self):
+        if self._opt_batch_size is not None:
+            return self.opt_pipe_set(self._opt_batch_size)
+        else:
+            raise RuntimeError("opt batch size not set")
+
     def training_bake(self):
 
         weights = []
@@ -165,3 +181,49 @@ class Constructor(object):
 
         self.save_list = weights + biases + others
 
+    def opt_bake(self):
+
+        weights = []
+        biases = []
+        others = []
+
+        def trainable_collect(w=None, b=None, o=None):
+            if w:
+                weights.append(w)
+            if b:
+                biases.append(b)
+            if o:
+                others.append(o)
+
+        pipe = tf.constant("opt", name="pipe")
+        compare = {
+            tf.equal(pipe, "opt"): self.opt_pipe,
+        }
+        ti, tr = tf.case(compare, exclusive=True, strict=True)
+        ti = tf.identity(ti, name="inputs")
+        tr = tf.identity(tr, name="references")
+        self.graph = self.graphGen(ti, tr, trainable_collect)
+
+        with self.graph.as_default():
+            epoch = tf.get_variable(name="global_step", initializer=0)
+            tf.assign_add(epoch, 1, name="global_step_inc")
+
+            ref = self.graph.get_tensor_by_name("outputs:0")
+            ref_loss = tf.identity(ref - tr, name="ref_rmse")
+
+            with tf.variable_scope("", reuse=True):
+                opt_container = tf.get_variable(name="opt_container")
+            optimizer = tf.train.AdamOptimizer(self.learning_rate)
+            optimizer.minimize(
+                ref_loss,
+                var_list=[opt_container],
+                name="train_op",
+            )
+
+            init_g = tf.global_variables_initializer()
+            init_l = tf.local_variables_initializer()
+            init_d = tf.no_op(name="epoch_init")
+
+            tf.group(init_g, init_l, init_d, name="global_init")
+
+        self.save_list = weights + biases + others

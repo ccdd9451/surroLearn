@@ -54,16 +54,20 @@ class Dataset(object):
         maxs = inputs.max(axis=0)
         ru = tf.random_uniform((length, shape))
 
-        x = tf.Variable(
-            ru * (maxs - mins) + mins,
-            excepted_shape=(length, shape),
-            name="opt_container")
-        y = np.zeros([length])
+        with tf.variable_scope("", reuse=False):
+            inp_t = tf.get_variable(
+                name="opt_container",
+                initializer=ru * (maxs - mins) + mins,
+            )
+            ref_t = tf.zeros([length, 1])
 
         minvals = mins[None, :].repeat(length, 0)
         maxvals = maxs[None, :].repeat(length, 0)
 
-        return tf.clip_by_value(x, minvals, maxvals), y
+        inp_t = tf.clip_by_value(inp_t, minvals, maxvals)
+        inp_t = tf.identity(inp_t, name="inputs")
+        ref_t = tf.identity(ref_t, name="reference")
+        return inp_t, ref_t
 
 
 class Devider(object):

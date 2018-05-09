@@ -135,7 +135,6 @@ class Main(object):
         """ basic training process with three pipes tested """
 
         def w():
-
             config = tf.ConfigProto()
             config.graph_options.optimizer_options.global_jit_level = tf.OptimizerOptions.ON_1
 
@@ -154,12 +153,7 @@ class Main(object):
 
         return self
 
-    def train(self):
-        """ last training command, workup arguments will follow """
-        self._worklist.construct.append(
-            lambda: self._constructor.training_bake())
-        self.__smpl_train()
-
+    def __go(self):
         for name, preparation in self._worklist._asdict().items():
             if len(preparation) == 0:
                 raise
@@ -172,6 +166,37 @@ class Main(object):
                     call()
         except KeyboardInterrupt as e:
             print(e)
+
+    def varopt(self, batch_size):
+        """ args: batch_size using for batch gradient optimization """
+        def w():
+            config = tf.ConfigProto()
+            config.graph_options.optimizer_options.global_jit_level = tf.OptimizerOptions.ON_1
+
+            self._executor = Executor(
+                tf.Session(config=config),
+                self._constructor.graph,
+                self._constructor.save_list,
+                self.save_dir)
+            self._route.insert(0,
+                               lambda: self._executor.input_opting(self._epoch_each))
+
+        self._worklist.construct.append(
+            lambda: self._constructor.opt_pipe_set(self.batch_size))
+        self._worklist.construct.append(
+            lambda: self._constructor.opt_bake())
+
+        self._worklist.execute.insert(0, w)
+        self.__go()
+
+        return workupParser
+
+    def train(self):
+        """ last training command, workup arguments will follow """
+        self._worklist.construct.append(
+            lambda: self._constructor.training_bake())
+        self.__smpl_train()
+        self.__go()
 
         self._executor.save_model()
         return workupParser
@@ -254,6 +279,7 @@ for i in range(self.slots):
         return self
 
     _had_plot = False
+    _had_tick = False
 
     def plot_item(self, name):
         """ (optional) arg: var1|var2|... plotting images """
@@ -268,9 +294,28 @@ for i in range(self.slots):
                 self._worklist.execute.append(w)
 
         if not self._had_plot:
-            self._route.append(lambda: self._executor.tick())
             self._route.append(lambda: BroadcastSave())
             self._had_plot = True
+        if not self._had_tick:
+            self._route.append(lambda: self._executor.tick())
+            self._had_tick = True
+
+        return self
+
+    def observe_item(self, name):
+        """ (optional) arg: var1|var2|... observe items but not plot """
+        variables = name.split("|")
+        for var in variables:
+            if var not in "train cross_valid test".split():
+
+                def w():
+                    self._executor.add_tick(var)
+
+                self._worklist.execute.append(w)
+
+        if not self._had_tick:
+            self._route.append(lambda: self._executor.tick())
+            self._had_tick = True
 
         return self
 

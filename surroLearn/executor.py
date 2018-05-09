@@ -91,6 +91,24 @@ class Executor(object):
         global_step = self._sess.run(self._global_step)
         print(datetime.now(), "Training on step ", global_step, " finished.")
 
+    def input_opting(self, epochs=50):
+        if self.evaluate_only:
+            raise UnableToTrainError("Attempt to run training process on a "
+                                     "evaluating model.")
+        sample = {
+            self.pipe: "opt",
+        }
+        for i in range(epochs):
+            self._sess.run(self._global_step_inc)
+            inputs, _ = self._sess.run(
+                [self.inputs, self.train_op], feed_dict=sample)
+
+        self.rmse_hist.record("opt", inputs)
+
+        global_step = self._sess.run(self._global_step)
+        print(datetime.now(), "Opting on step ", global_step, " finished.")
+
+
     def evaluate(self, cls):
         sample = {
             self.pipe: cls,
