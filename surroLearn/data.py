@@ -47,6 +47,24 @@ class Dataset(object):
 
         return inp_t, ref_t
 
+    @staticmethod
+    def restricted_opt_container(inputs, reference, length):
+        shape = inputs.shape[1]
+        mins = inputs.min(axis=0)
+        maxs = inputs.max(axis=0)
+        ru = tf.random_uniform((length, shape))
+
+        x = tf.Variable(
+            ru * (maxs - mins) + mins,
+            excepted_shape=(length, shape),
+            name="opt_container")
+        y = np.zeros([length])
+
+        minvals = mins[None, :].repeat(length, 0)
+        maxvals = maxs[None, :].repeat(length, 0)
+
+        return tf.clip_by_value(x, minvals, maxvals), y
+
 
 class Devider(object):
     """
@@ -111,6 +129,7 @@ def load(filename):
 def compatible_load(filename):
     d = load(filename)
     return d["X"], d["Y"]
+
 
 def unittest_sample():
     inputs = np.random.randn(100, 10)
