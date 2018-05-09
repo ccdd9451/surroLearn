@@ -167,7 +167,7 @@ class Main(object):
         except KeyboardInterrupt as e:
             print(e)
 
-    def varopt(self, batch_size):
+    def varopt(self):
         """ args: batch_size using for batch gradient optimization """
         def w():
             config = tf.ConfigProto()
