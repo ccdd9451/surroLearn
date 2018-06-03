@@ -4,6 +4,7 @@
 import os
 import sys
 import tensorflow as tf
+import numpy as np
 
 from collections import namedtuple
 from pathlib import Path
@@ -190,6 +191,34 @@ class Main(object):
         self.__go()
 
         return workupParser
+
+    def predict(self):
+        """ args: batch_size using for batch gradient optimization """
+        def w():
+            config = tf.ConfigProto()
+            config.graph_options.optimizer_options.global_jit_level = tf.OptimizerOptions.ON_1
+
+            self._executor = Executor(
+                tf.Session(config=config),
+                self._constructor.graph,
+                self._constructor.save_list,
+                self.save_dir)
+
+            def r():
+                line = input("please input a new set of arguments")
+                args = np.fromstring(line)
+                print(self._executor.predict(args))
+
+            self._route.append(r)
+
+        self._worklist.construct.append(
+            lambda: self._constructor.training_bake())
+
+        self._worklist.execute.insert(0, w)
+        self.__go()
+
+        return workupParser
+
 
     def train(self):
         """ last training command, workup arguments will follow """
