@@ -206,7 +206,7 @@ class Main(object):
 
             def r():
                 line = input("please input a new set of arguments")
-                args = np.fromstring(line)
+                args = np.fromstring(line)[None, :]
                 print(self._executor.predict(args))
 
             self._route.append(r)
