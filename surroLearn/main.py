@@ -205,8 +205,8 @@ class Main(object):
                 self.save_dir)
 
             def r():
-                line = input("please input a new set of arguments")
-                args = np.fromstring(line)[None, :]
+                line = input("please input a new set of arguments\n")
+                args = np.fromstring(line, sep=",")[None, :]
                 print(self._executor.predict(args))
 
             self._route.append(r)
