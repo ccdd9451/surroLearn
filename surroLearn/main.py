@@ -168,6 +168,31 @@ class Main(object):
         except KeyboardInterrupt as e:
             print(e)
 
+    def varopt_constrained(self, sockfile):
+        """ args: batch_size using for batch gradient optimization """
+        def w():
+            config = tf.ConfigProto()
+            config.graph_options.optimizer_options.global_jit_level = tf.OptimizerOptions.ON_1
+
+            self._executor = Executor(
+                tf.Session(config=config),
+                self._constructor.graph,
+                self._constructor.save_list,
+                self.save_dir)
+            self._executor.setup_steersuite(sockfile)
+            self._route.insert(0,
+                               lambda: self._executor.input_constrained_opting(self._epoch_each))
+
+        self._worklist.construct.append(
+            lambda: self._constructor.opt_pipe_set(self.batch_size))
+        self._worklist.construct.append(
+            lambda: self._constructor.opt_bake())
+
+        self._worklist.execute.insert(0, w)
+        self.__go()
+
+        return workupParser
+
     def varopt(self):
         """ args: batch_size using for batch gradient optimization """
         def w():

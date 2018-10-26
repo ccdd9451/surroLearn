@@ -6,6 +6,7 @@ import tensorflow as tf
 
 from .utils import nilfunc
 from .recorder import Recorder
+from .steersuite import SteerSuite
 from datetime import datetime
 
 
@@ -104,6 +105,29 @@ class Executor(object):
                 [self.inputs, self.train_op], feed_dict=sample)
 
         self.rmse_hist.record("opt", inputs)
+
+        global_step = self._sess.run(self._global_step)
+        print(datetime.now(), "Opting on step ", global_step, " finished.")
+
+    def setup_steersuite(self, sockfile):
+        self._steersuite = SteerSuite(sockfile)
+
+    def input_constrained_opting(self, epochs=50):
+        if self.evaluate_only:
+            raise UnableToTrainError("Attempt to run training process on a "
+                                     "evaluating model.")
+        sample = {
+            self.pipe: "opt",
+        }
+        params_before = self._sess.run(self.inputs, feed_dict=sample)
+
+        for i in range(epochs):
+            self._sess.run(self._global_step_inc)
+            params_after, _ = self._sess.run(
+                [self.inputs, self.train_op], feed_dict=sample)
+            params_before = self._steersuite.update(params_before, params_after)
+
+        self.rmse_hist.record("opt", params_before)
 
         global_step = self._sess.run(self._global_step)
         print(datetime.now(), "Opting on step ", global_step, " finished.")
