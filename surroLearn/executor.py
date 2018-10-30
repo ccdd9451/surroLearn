@@ -113,21 +113,24 @@ class Executor(object):
         self._steersuite = SteerSuite(sockfile)
 
     def input_constrained_opting(self, epochs=50):
+        with tf.variable_scope("", reuse=True):
+            opt_container = tf.get_variable("opt_container")
         if self.evaluate_only:
             raise UnableToTrainError("Attempt to run training process on a "
                                      "evaluating model.")
         sample = {
             self.pipe: "opt",
         }
-        params_before = self._sess.run(self.inputs, feed_dict=sample)
 
+        params_before = self._sess.run(self.inputs, feed_dict=sample)
         for i in range(epochs):
             self._sess.run(self._global_step_inc)
-            params_after, _ = self._sess.run(
-                [self.inputs, self.train_op], feed_dict=sample)
-            params_before = self._steersuite.update(params_before, params_after)
+            _ = self._sess.run(self.train_op, feed_dict=sample)
+        params_after = self._sess.run(self.inputs, feed_dict=sample)
+        params_confirmed = self._steersuite.update(params_before, params_after)
 
-        self.rmse_hist.record("opt", params_before)
+        opt_container.load(params_confirmed, self._sess)
+        self.rmse_hist.record("opt", params_confirmed)
 
         global_step = self._sess.run(self._global_step)
         print(datetime.now(), "Opting on step ", global_step, " finished.")

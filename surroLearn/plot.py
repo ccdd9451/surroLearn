@@ -3,6 +3,7 @@
 
 # pylint: disable=all
 import threading
+import numpy as np
 import matplotlib as mpl
 mpl.use('Agg')
 import matplotlib.pyplot as plt
@@ -67,4 +68,5 @@ class Plot(object):
     def add_line(self, x, y, **kwargs):
         if not kwargs.get("label"):
             kwargs["label"] = self._name
+        y = np.squeeze(y, (2,))
         self._ax.plot(x, y, **kwargs)
