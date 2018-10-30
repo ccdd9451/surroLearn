@@ -2,6 +2,7 @@
 # encoding: utf-8
 
 import os
+import sys
 import tensorflow as tf
 
 from .utils import nilfunc
@@ -111,6 +112,19 @@ class Executor(object):
 
     def setup_steersuite(self, sockfile):
         self._steersuite = SteerSuite(sockfile)
+
+    def reinit_under_validation(self):
+        print("checking validations to initial scenarios")
+        with tf.variable_scope("", reuse=True):
+            opt_container = tf.get_variable("opt_container")
+        sample = { self.pipe: "opt", }
+        regen = self._graph.get_tensor_by_name("map_regen:0")
+        inputs = self._sess.run(opt_container, feed_dict=sample)
+        for i in range(inputs.shape[0]):
+            while not self._steersuite.init_validation(inputs[i]):
+                reg = self._sess.run(regen)
+                inputs[i, :] = reg
+        opt_container.load(inputs, self._sess)
 
     def input_constrained_opting(self, epochs=50):
         with tf.variable_scope("", reuse=True):

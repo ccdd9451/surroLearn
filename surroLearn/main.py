@@ -180,8 +180,8 @@ class Main(object):
                 self._constructor.save_list,
                 self.save_dir)
             self._executor.setup_steersuite(sockfile)
-            self._route.insert(0,
-                               lambda: self._executor.input_constrained_opting(self._epoch_each))
+            self._executor.reinit_under_validation()
+            self._route.insert(0, lambda: self._executor.input_constrained_opting(self._epoch_each))
 
         self._worklist.construct.append(
             lambda: self._constructor.opt_pipe_set(self.batch_size))

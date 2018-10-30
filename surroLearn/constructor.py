@@ -124,7 +124,7 @@ class Constructor(object):
     def opt_pipe_set(self, batch_size):
         self._opt_batch_size = batch_size
         return data.Dataset.restricted_opt_container(*self.devider.train.all(),
-                                                     batch_size)
+                                                    batch_size)
 
     def opt_pipe(self):
         if self._opt_batch_size is not None:

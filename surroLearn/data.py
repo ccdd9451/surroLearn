@@ -67,6 +67,12 @@ class Dataset(object):
         inp_t = tf.clip_by_value(inp_t, minvals, maxvals)
         inp_t = tf.identity(inp_t, name="inputs")
         ref_t = tf.identity(ref_t, name="reference")
+
+        with tf.name_scope(""):
+            ru = tf.random_uniform((shape, ))
+            tf.identity(ru*(maxs-mins) + mins,
+                name="map_regen")
+
         return inp_t, ref_t
 
 

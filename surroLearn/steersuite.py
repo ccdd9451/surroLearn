@@ -10,34 +10,37 @@ import numpy as np
 class SteerSuite(object):
     def __init__(self, sockfilename):
         self._sock_f = "ipc://" + sockfilename
-
-    def send(self, msg):
         context = zmq.Context()
         socket = context.socket(zmq.REQ)
         socket.connect(self._sock_f)
-        socket.send_json(msg)
-        return socket
 
-    def recv(self, sock):
-        return sock.recv_json()
+        self._socket = socket
 
+    def send(self, msg):
+        self._socket.send_json(msg)
+        return self._socket.recv_json()
 
     def update(self, params_before, params_after):
         shape = params_before.shape
         params_confirmed = np.ones(shape, dtype=np.float32)
 
-        socks = []
-
         for i in range(shape[0]):
             msg = {
+                "taskname": "cmp",
                 "before": params_before[i, :].tolist(),
                 "after":  params_after[i, :].tolist()
             }
-            socks.append(self.send(msg))
-
-        for i in range(shape[0]):
-            params_confirmed[i, :] = self.recv(socks[i])
+            params_confirmed[i, :] = self.send(msg)
 
         return params_confirmed
+
+    def init_validation(self, params_randinit):
+        msg = {
+            "taskname": "init",
+            "params": params_randinit.ravel().tolist()
+        }
+
+        return int(self.send(msg))
+
 
 
